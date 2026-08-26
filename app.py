@@ -2,16 +2,16 @@ import streamlit as st
 import subprocess
 import os
 import tempfile
-import re
+import random
 
 # إعدادات الصفحة
 st.set_page_config(
-    page_title="استوديو تعديل الفيديو الذكي",
+    page_title="استوديو الفيديو الذكي - الفيروسي",
     page_icon="🎬",
     layout="centered"
 )
 
-# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
+# تخصيص واجهة عربية كاملة وحماية الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -94,8 +94,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">أنماط سينمائية، قص ذكي، وتغطية كاملة للشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو النشر الفيروسي وتجهيز المقاطع</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">كسر بصمة التكرار، فيسات تفاعلية تلقائية، وتغطية الشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -130,12 +130,27 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # خيارات القص والزوائد
-    col_cut1, col_cut2 = st.columns(2)
-    with col_cut1:
-        enable_auto_trim = st.checkbox("✂️ قص الصمت والزوائد تلقائياً", value=True)
-    with col_cut2:
-        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين)", value=True)
+    # خيارات كسر البصمة والفيسات التلقائية (مفعلة تلقائياً لراحتك)
+    col_v1, col_v2 = st.columns(2)
+    with col_v1:
+        enable_anti_copy = st.checkbox("🛡️ كسر بصمة التكرار (تخطي حظر النسخ والإكسبلور)", value=True)
+    with col_v2:
+        enable_auto_emojis = st.checkbox("🎭 وضع فيسات تفاعلية تلقائياً على المقطع", value=True)
+
+    # اختيار نمط الفيسات التلقائي
+    chosen_emoji_set = "😂 🔥"
+    if enable_auto_emojis:
+        emoji_options = {
+            "🎲 عشوائي ذكي (تلقائي)": random.choice(["😂 🔥", "😱 🤯", "👀 💯", "👏 😂", "⚡ 💥"]),
+            "😂 ضحك وتفاعل (😂 🔥)": "😂 🔥",
+            "😱 صدمة وإثارة (😱 🤯)": "😱 🤯",
+            "👀 انتباه وتركيز (👀 💯)": "👀 💯",
+            "⚡ حماس وسرعة (⚡ 💥)": "⚡ 💥"
+        }
+        emoji_choice = st.selectbox("نوع الفيسات التفاعلية:", list(emoji_options.keys()))
+        chosen_emoji_set = emoji_options[emoji_choice]
+
+    st.divider()
 
     # شريط العنوان الجذاب
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
@@ -146,7 +161,7 @@ if uploaded_file is not None:
             clean_hook = hook_text.strip().replace(":", "\\:").replace("'", "")
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=60:fontsize=28:fontcolor=black:box=1:boxcolor=yellow@0.95:boxborderw=10"
 
-    # وضع وحماية الحساب (مع تغطية واسعة جداً لمنطقة الحساب القديم)
+    # وضع وحماية الحساب مع التغطية الواسعة
     enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم تماماً", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
@@ -169,7 +184,6 @@ if uploaded_file is not None:
         box_style = "box=1:boxcolor=black@0.90:boxborderw=10:fontcolor=white:fontsize=24"
         
         if acc_pos == "تغطية ذكية واسعة (إخفاء تام للشعارات في الزوايا)":
-            # تغطية مساحة واسعة في أسفل اليمين بالكامل لتشمل حساب Snapchat والشعار، وتغطية الأعلى، ووضع حسابك في الأعلى بوضوح
             stamp_filter = (
                 f",drawbox=x=0:y=0:w=320:h=110:color=black@0.90:t=fill"
                 f",drawbox=x={target_w-380}:y={target_h-160}:w=380:h=160:color=black@0.90:t=fill"
@@ -184,81 +198,59 @@ if uploaded_file is not None:
         elif acc_pos == "أسفل اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=h-th-50:{box_style}"
 
-    all_text_filters = f"{hook_filter}{stamp_filter}"
+    # إضافة شارة الفيسات البصرية
+    emoji_filter = ""
+    if enable_auto_emojis and chosen_emoji_set:
+        emoji_filter = f",drawtext=text='{chosen_emoji_set}':x=w-tw-30:y=40:fontsize=34:box=1:boxcolor=black@0.75:boxborderw=8"
 
-    if st.button("🚀 معالجة فائقة السرعة وتجهيز المقطع"):
-        with st.spinner("جاري مسح الشعارات القديمة وتجهيز الفيديو..."):
+    all_text_filters = f"{hook_filter}{stamp_filter}{emoji_filter}"
+
+    if st.button("🚀 معالجة فورية وكسر البصمة للنشر"):
+        with st.spinner("جاري كسر البصمة وإضافة التفاعلات وتجهيز المقطع للنشر..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            trim_start = 0.0
-            trim_end = 0.0
-            try:
-                detect_cmd = [
-                    "ffmpeg", "-i", input_path,
-                    "-af", "silencedetect=noise=-35dB:d=0.8",
-                    "-f", "null", "-"
-                ]
-                res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=10)
-                out_text = res_detect.stderr
-                
-                dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
-                total_dur = 0.0
-                if dur_match:
-                    h, m, s = dur_match.groups()
-                    total_dur = int(h) * 3600 + int(m) * 60 + float(s)
-
-                if cut_outro and total_dur > 3.0:
-                    trim_end = total_dur - 2.2
-                    
-                if enable_auto_trim:
-                    s_starts = [float(x) for x in re.findall(r'silence_start:\s*([0-9.]+)', out_text)]
-                    s_ends = [float(x) for x in re.findall(r'silence_end:\s*([0-9.]+)', out_text)]
-                    if s_starts and s_starts[0] < 1.5 and s_ends:
-                        trim_start = s_ends[0]
-            except Exception:
-                pass
+            # تعديلات كسر البصمة اللونية للمحتوى
+            color_grade = ",eq=saturation=1.04:contrast=1.03:brightness=0.01" if enable_anti_copy else ""
 
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{color_grade}[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             elif style_code == "podcast_card":
                 filter_complex = (
                     f"color=c=#0B0F17:s={target_w}x{target_h}[bg];"
                     f"[0:v]scale={target_w}-40:{target_h}-180:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{color_grade}[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             elif style_code == "crop":
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}{all_text_filters}[outv]"
+                    f"crop={target_w}:{target_h}{color_grade}{all_text_filters}[outv]"
                 )
             else:
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{color_grade},"
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{all_text_filters}[outv]"
                 )
 
-            cmd = ["ffmpeg", "-y"]
-            if trim_start > 0:
-                cmd.extend(["-ss", str(trim_start)])
-            if trim_end > trim_start:
-                cmd.extend(["-to", str(trim_end)])
-
-            cmd.extend([
+            # تجهيز أمر FFmpeg وحذف البيانات القديمة مع تعديل السرعة الخفي
+            cmd = [
+                "ffmpeg", "-y",
+                "-threads", "0",
                 "-i", input_path,
                 "-filter_complex", filter_complex,
                 "-map", "[outv]",
                 "-map", "0:a?",
+                "-map_metadata", "-1",
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-tune", "zerolatency",
@@ -267,20 +259,20 @@ if uploaded_file is not None:
                 "-c:a", "aac",
                 "-b:a", "96k",
                 output_path
-            ])
+            ]
 
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تمت المعالجة وإخفاء الشعارات بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"🎉 تم تجهيز الفيديو وكسر بصمته بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الجاهز",
+                        label="⬇️ تحميل المقطع الحصري الجاهز للنشر",
                         data=f,
-                        file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"viral_unique_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
             except subprocess.CalledProcessError as e:
