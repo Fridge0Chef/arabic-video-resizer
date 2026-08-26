@@ -2,16 +2,15 @@ import streamlit as st
 import subprocess
 import os
 import tempfile
-import re
 
 # إعدادات الصفحة
 st.set_page_config(
-    page_title="استوديو تعديل الفيديو الذكي",
+    page_title="استوديو تعديل وتجهيز الفيديوهات السريع",
     page_icon="🎬",
     layout="centered"
 )
 
-# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
+# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية والشريط الأحمر، وتصحيح الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -94,8 +93,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">أنماط سينمائية، قص ذكي، وتغطية نظيفة للشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديوهات فائق السرعة</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">عناوين جذابة، حذف الزوائد والخواتيم، وتغطية الشعارات بلمح البصر</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -130,24 +129,40 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # خيارات القص والزوائد
-    col_cut1, col_cut2 = st.columns(2)
-    with col_cut1:
-        enable_auto_trim = st.checkbox("✂️ قص الصمت والزوائد تلقائياً", value=True)
-    with col_cut2:
-        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين)", value=True)
+    # خيارات إضافية لحذف الزوائد والخواتيم
+    st.markdown("### ✂️ خيارات التصفية وحذف الزوائد")
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين تلقائياً)", value=True)
+    with col_c2:
+        cut_intro = st.checkbox("✂️ حذف الثواني الزائدة في بداية المقطع (أول ثانية)", value=False)
 
-    # شريط العنوان الجذاب
-    enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
+    st.divider()
+
+    # شريط العنوان الجذاب (Hook Bar)
+    enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو", value=True)
     hook_filter = ""
     if enable_hook:
-        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد للنهاية 😱🔥")
+        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد القصة للنهاية 😱🔥")
+        col_h1, col_h2 = st.columns(2)
+        with col_h1:
+            hook_bg = st.selectbox("لون خلفية الشريط:", ["أصفر 🟨", "أسود ⬛", "أحمر 🟥", "أبيض ⬜"])
+        with col_h2:
+            hook_color = "black" if hook_bg in ["أصفر 🟨", "أبيض ⬜"] else "white"
+
         if hook_text.strip():
             clean_hook = hook_text.strip().replace(":", "\\:").replace("'", "")
-            hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=60:fontsize=28:fontcolor=black:box=1:boxcolor=yellow@0.95:boxborderw=10"
+            bg_map = {
+                "أصفر 🟨": "yellow@0.95",
+                "أسود ⬛": "black@0.90",
+                "أحمر 🟥": "red@0.90",
+                "أبيض ⬜": "white@0.95"
+            }
+            hook_bg_val = bg_map[hook_bg]
+            hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=50:fontsize=26:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=10"
 
-    # وضع وحماية الحساب (بدون أي مربعات عشوائية في الأعلى)
-    enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم في الأسفل", value=True)
+    # وضع وحماية الحساب وتغطية القديم
+    enable_stamp = st.checkbox("✨ وضع حسابك وتغطية الشعار القديم أسفل اليمين", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
         col_sel1, col_sel2 = st.columns(2)
@@ -155,72 +170,62 @@ if uploaded_file is not None:
             chosen_label = st.selectbox("👤 اختر حسابك:", list(saved_accounts.keys()))
         with col_sel2:
             acc_pos = st.selectbox(
-                "📍 موضع الشارة وحجب القديم:",
+                "📍 موضع الحساب:",
                 [
-                    "تغطية الحساب القديم أسفل اليمين + وضع حسابك في الأعلى بوضوح",
-                    "أعلى المنتصف (بدون تغطية سفلية)",
+                    "تغطية الشعار القديم + وضع حسابك في الأعلى بوضوح",
                     "أسفل اليمين فقط",
-                    "أعلى اليسار",
-                    "أسفل اليسار"
+                    "أعلى المنتصف",
+                    "أعلى اليسار"
                 ]
             )
 
         final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
-        box_style = "box=1:boxcolor=black@0.85:boxborderw=10:fontcolor=white:fontsize=24"
+        box_style = "box=1:boxcolor=black@0.85:boxborderw=10:fontcolor=white:fontsize=22"
         
-        if acc_pos == "تغطية الحساب القديم أسفل اليمين + وضع حسابك في الأعلى بوضوح":
-            # صندوق أسود نظيف يغطي الشعار والحساب القديم في أسفل اليمين فقط، ووضع حسابك الجديد في الأعلى
+        if acc_pos == "تغطية الشعار القديم + وضع حسابك في الأعلى بوضوح":
             stamp_filter = (
                 f",drawbox=x={target_w-360}:y={target_h-170}:w=360:h=160:color=black@0.90:t=fill"
-                f",drawtext=text='{final_text}':x=(w-tw)/2:y=120:{box_style}"
+                f",drawtext=text='{final_text}':x=(w-tw)/2:y=110:{box_style}"
             )
-        elif acc_pos == "أعلى المنتصف (بدون تغطية سفلية)":
-            stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=120:{box_style}"
         elif acc_pos == "أسفل اليمين فقط":
             stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=h-th-50:{box_style}"
+        elif acc_pos == "أعلى المنتصف":
+            stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=110:{box_style}"
         elif acc_pos == "أعلى اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=30:{box_style}"
-        elif acc_pos == "أسفل اليسار":
-            stamp_filter = f",drawtext=text='{final_text}':x=25:y=h-th-50:{box_style}"
 
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
-    if st.button("🚀 معالجة فائقة السرعة وتجهيز المقطع"):
-        with st.spinner("جاري إزالة الشعار القديم وتجهيز المقطع..."):
+    if st.button("🚀 معالجة فورية وتجهيز المقطع"):
+        with st.spinner("جاري معالجة الفيديو وتطبيق التعديلات بسرعة خيالية..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            trim_start = 0.0
-            trim_end = 0.0
+            # استخراج مدة الفيديو فوراً بدون أي تأخير باستخدام ffprobe
+            total_duration = 0.0
             try:
-                detect_cmd = [
-                    "ffmpeg", "-i", input_path,
-                    "-af", "silencedetect=noise=-35dB:d=0.8",
-                    "-f", "null", "-"
+                probe_cmd = [
+                    "ffprobe", "-v", "error",
+                    "-show_entries", "format=duration",
+                    "-of", "default=noprint_wrappers=1:nokey=1",
+                    input_path
                 ]
-                res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=10)
-                out_text = res_detect.stderr
-                
-                dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
-                total_dur = 0.0
-                if dur_match:
-                    h, m, s = dur_match.groups()
-                    total_dur = int(h) * 3600 + int(m) * 60 + float(s)
-
-                if cut_outro and total_dur > 3.0:
-                    trim_end = total_dur - 2.2
-                    
-                if enable_auto_trim:
-                    s_starts = [float(x) for x in re.findall(r'silence_start:\s*([0-9.]+)', out_text)]
-                    s_ends = [float(x) for x in re.findall(r'silence_end:\s*([0-9.]+)', out_text)]
-                    if s_starts and s_starts[0] < 1.5 and s_ends:
-                        trim_start = s_ends[0]
+                res_probe = subprocess.run(probe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3)
+                total_duration = float(res_probe.stdout.strip())
             except Exception:
                 pass
 
+            # حساب حدود القص الفوري
+            trim_start = 1.0 if cut_intro else 0.0
+            trim_end = 0.0
+
+            if cut_outro and total_duration > 3.0:
+                trim_end = total_duration - 2.2
+
+            # بناء الفلاتر
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
@@ -272,12 +277,12 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تمت المعالجة بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تمت المعالجة بنجاح فائق! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الجاهز",
+                        label="⬇️ تحميل المقطع الجاهز للنشر",
                         data=f,
                         file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
