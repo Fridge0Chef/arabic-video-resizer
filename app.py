@@ -10,11 +10,11 @@ st.set_page_config(
     layout="centered"
 )
 
-# تصميم الواجهة ودعم اللغة العربية
+# تخصيص واجهة عصرية ودعم اللغة العربية
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-    html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox, .stCheckbox, .stSlider, .stRadio {
+    html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox, .stCheckbox, .stSlider, .stRadio, .stTextInput {
         font-family: 'Cairo', sans-serif !important;
         direction: rtl;
         text-align: right;
@@ -29,8 +29,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل وضغط الفيديو الذكي</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عدّل الأبعاد، أزل العلامات المائية، وقلل حجم الفيديو لأقل مساحة ممكنة</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو واستبدال الحسابات</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الحساب القديم، وضع معرّف حساباتك الشخصية مكانه</p>', unsafe_allow_html=True)
 
 # أبعاد المنصات
 PLATFORMS = {
@@ -42,7 +42,7 @@ PLATFORMS = {
 }
 
 STYLES = {
-    "خلفية ضبابية ذكية (Blurred Background)": "blur",
+    "خلفية ضبابية سريعة (Blurred Background)": "blur",
     "قص وتكبير لملء الشاشة (Center Crop)": "crop",
     "إضافة إطار أسود كلاسيكي (Fit Black Bars)": "fit"
 }
@@ -60,13 +60,13 @@ if uploaded_file is not None:
     with col2:
         selected_style = st.selectbox("🎨 نمط ملء الشاشة:", list(STYLES.keys()))
 
-    # خيار ضغط وتقليل حجم الفيديو (القيقات والميجابايت)
+    # خيار ضغط الحجم
     size_mode = st.radio(
         "📦 خيار حجم ومساحة الملف النهائي:",
         [
-            "⚡ حجم خفيف جداً ومضغوط (توفير عالي للبيانات والمساحة وسرعة فائقة)",
+            "⚡ حجم خفيف جداً ومضغوط (توفير عالي للبيانات وسرعة فائقة)",
             "⚖️ حجم متوازن (دقة 1080p قياسية)",
-            "💎 أعلى دقة ممكنة (حجم أكبر)"
+            "💎 أعلى دقة ممكنة"
         ]
     )
 
@@ -74,86 +74,100 @@ if uploaded_file is not None:
         target_w = PLATFORMS[selected_platform]["w_low"]
         target_h = PLATFORMS[selected_platform]["h_low"]
         crf_val = "28"
-        audio_bitrate = "96k"
+        font_size = "24"
     elif "حجم متوازن" in size_mode:
         target_w = PLATFORMS[selected_platform]["w"]
         target_h = PLATFORMS[selected_platform]["h"]
         crf_val = "24"
-        audio_bitrate = "128k"
+        font_size = "34"
     else:
         target_w = PLATFORMS[selected_platform]["w"]
         target_h = PLATFORMS[selected_platform]["h"]
         crf_val = "20"
-        audio_bitrate = "192k"
+        font_size = "34"
 
     style_code = STYLES[selected_style]
 
     st.divider()
     
-    # خيارات إزالة العلامة المائية
-    remove_wm = st.checkbox("🧹 تفعيل ميزة إزالة / تمويه العلامة المائية (Delogo)")
+    # 2. ميزة استبدال الشعار بحساباتك
+    replace_account = st.checkbox("✨ استبدال الحساب / العلامة المائية بحساباتي الخاصة", value=True)
     
-    delogo_filter = ""
-    if remove_wm:
-        wm_position = st.selectbox(
-            "📍 اختر موضع الشعار أو العلامة المائية:",
-            [
-                "علامة تيك توك التلقائية (أعلى اليسار + أسفل اليمين)",
-                "أعلى اليسار",
-                "أعلى اليمين",
-                "أسفل اليسار",
-                "أسفل اليمين",
-                "موضع مخصص (تحديد يدوي)"
-            ]
-        )
+    extra_filters = ""
+    if replace_account:
+        st.write("📝 **أدخل حساباتك لتغطية الحساب القديم في المقطع:**")
         
-        if wm_position == "علامة تيك توك التلقائية (أعلى اليسار + أسفل اليمين)":
-            delogo_filter = f",delogo=x=15:y=20:w=220:h=90,delogo=x={target_w - 240}:y={target_h - 110}:w=220:h=90"
-        elif wm_position == "أعلى اليسار":
-            delogo_filter = ",delogo=x=15:y=20:w=240:h=100"
-        elif wm_position == "أعلى اليمين":
-            delogo_filter = f",delogo=x={target_w - 255}:y=20:w=240:h=100"
-        elif wm_position == "أسفل اليسار":
-            delogo_filter = f",delogo=x=15:y={target_h - 120}:w=240:h=100"
-        elif wm_position == "أسفل اليمين":
-            delogo_filter = f",delogo=x={target_w - 255}:y={target_h - 120}:w=240:h=100"
-        else:
-            col_x, col_y = st.columns(2)
-            with col_x:
-                custom_x = st.slider("الإحداثي الأفقي (X):", 0, target_w - 50, 40)
-                custom_w = st.slider("عرض منطقة التمويه (W):", 30, 400, 180)
-            with col_y:
-                custom_y = st.slider("الإحداثي الرأسي (Y):", 0, target_h - 30, 40)
-                custom_h = st.slider("ارتفاع منطقة التمويه (H):", 20, 250, 80)
-            delogo_filter = f",delogo=x={custom_x}:y={custom_y}:w={custom_w}:h={custom_h}"
+        col_acc1, col_acc2 = st.columns(2)
+        with col_acc1:
+            platform_type = st.selectbox("نوع الحساب:", ["سناب شات 👻", "تيك توك 🎵", "يوتيوب ▶️", "إنستقرام 📸", "منصة إكس 𝕏", "معرّف مخصص 🏷️"])
+            my_handle = st.text_input("اسم حسابك (مثال: @YourUser):", placeholder="@اسم_حسابك")
+        with col_acc2:
+            acc_pos = st.selectbox(
+                "📍 مكان وضع حسابك:",
+                [
+                    "تغطية علامة تيك توك (أعلى اليسار)",
+                    "تغطية علامة تيك توك السفلية (أسفل اليمين)",
+                    "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)",
+                    "أعلى اليمين",
+                    "أسفل اليسار"
+                ]
+            )
 
-    if st.button("🚀 ابدأ المعالجة والضغط الآن"):
-        with st.spinner("جاري الضغط والمعالجة السريعة..."):
+        # تجهيز النص المكتوب
+        icon_prefix = {
+            "سناب شات 👻": "Snap: ",
+            "تيك توك 🎵": "TikTok: ",
+            "يوتيوب ▶️": "YouTube: ",
+            "إنستقرام 📸": "IG: ",
+            "منصة إكس 𝕏": "X: ",
+            "معرّف مخصص 🏷️": ""
+        }[platform_type]
+
+        final_text = f"{icon_prefix}{my_handle.strip()}" if my_handle.strip() else ""
+
+        if final_text:
+            # فلتر رسم شريط أسود أنيق وكتابة الحساب الجديد فوقه
+            box_style = f"box=1:boxcolor=black@0.85:boxborderw=12:fontcolor=white:fontsize={font_size}"
+            
+            if acc_pos == "تغطية علامة تيك توك (أعلى اليسار)":
+                extra_filters += f",drawtext=text='{final_text}':x=30:y=40:{box_style}"
+            elif acc_pos == "تغطية علامة تيك توك السفلية (أسفل اليمين)":
+                extra_filters += f",drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
+            elif acc_pos == "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)":
+                extra_filters += f",drawtext=text='{final_text}':x=30:y=40:{box_style}"
+                extra_filters += f",drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
+            elif acc_pos == "أعلى اليمين":
+                extra_filters += f",drawtext=text='{final_text}':x=w-tw-40:y=40:{box_style}"
+            elif acc_pos == "أسفل اليسار":
+                extra_filters += f",drawtext=text='{final_text}':x=30:y=h-th-80:{box_style}"
+
+    if st.button("🚀 معالجة الفيديو ووضع حسابي الآن"):
+        with st.spinner("جاري إخفاء الحساب القديم ووضع حسابك الجديد..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # فلاتر المعالجة السريعة
+            # بناء الفلاتر
             if style_code == "blur":
                 filter_complex = (
                     f"[0:v]scale=120:213:force_original_aspect_ratio=increase,boxblur=4:4,"
                     f"scale={target_w}:{target_h}[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{delogo_filter}[outv]"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{extra_filters}[outv]"
                 )
             elif style_code == "crop":
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}{delogo_filter}[outv]"
+                    f"crop={target_w}:{target_h}{extra_filters}[outv]"
                 )
             else:
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
-                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{delogo_filter}[outv]"
+                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{extra_filters}[outv]"
                 )
 
             cmd = [
@@ -169,24 +183,23 @@ if uploaded_file is not None:
                 "-pix_fmt", "yuv420p",
                 "-crf", crf_val,
                 "-c:a", "aac",
-                "-b:a", audio_bitrate,
+                "-b:a", "128k",
                 output_path
             ]
 
             try:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
-                # حساب حجم الملف بعد الضغط
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"✅ تمت المعالجة والضغط بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت فقط)")
+                st.success(f"✅ تم وضع حسابك بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع المضغوط",
+                        label="⬇️ تحميل المقطع بحسابك الجديد",
                         data=f,
-                        file_name=f"compressed_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"branded_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
             except subprocess.CalledProcessError as e:
