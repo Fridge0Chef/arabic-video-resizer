@@ -10,12 +10,12 @@ st.set_page_config(
     layout="centered"
 )
 
-# تخصيص واجهة عربية حديثة ودعم الاتجاه من اليمين لليسار (RTL)
+# تخصيص واجهة عربية حديثة ودعم RTL
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
     
-    html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox {
+    html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox, .stCheckbox, .stSlider {
         font-family: 'Cairo', sans-serif !important;
         direction: rtl;
         text-align: right;
@@ -48,10 +48,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل أبعاد الفيديو للمنصات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عدّل مقاطعك لتناسب تيك توك، سناب شات، ريلز، وتويتر بضغطة زر مع الحفاظ على الجودة</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو وإزالة العلامات المائية</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">عدّل مقاطعك للمنصات وأزل الشعارات والعلامات المائية بضغطة زر واحدة</p>', unsafe_allow_html=True)
 
-# خيارات المنصات والأبعاد
+# أبعاد المنصات
 PLATFORMS = {
     "تيك توك / سناب شات / يوتيوب شورتس (9:16)": {"w": 1080, "h": 1920, "name": "9_16_Vertical"},
     "ريلز إنستقرام (9:16)": {"w": 1080, "h": 1920, "name": "Reels_9_16"},
@@ -60,9 +60,9 @@ PLATFORMS = {
     "يوتيوب كلاسيكي أفقي (16:9)": {"w": 1920, "h": 1080, "name": "Landscape_16_9"},
 }
 
-# خيارات أسلوب المعالجة (مثل GhostCut)
+# أنماط ملء الشاشة
 STYLES = {
-    "خلفية ضبابية ذكية (Blurred Background - الأفضل للفيديوهات الأفقية)": "blur",
+    "خلفية ضبابية ذكية (Blurred Background)": "blur",
     "قص وتكبير لملء الشاشة (Center Crop)": "crop",
     "إضافة إطار أسود كلاسيكي (Fit with Black Bars)": "fit"
 }
@@ -84,37 +84,72 @@ if uploaded_file is not None:
     target_h = PLATFORMS[selected_platform]["h"]
     style_code = STYLES[selected_style]
 
-    if st.button("🚀 ابدأ المعالجة والتحويل الآن"):
-        with st.spinner("جاري معالجة الفيديو بدقة عالية... يرجى الانتظار ثوانٍ معدودة"):
-            # حفظ الفيديو المؤقت
+    st.divider()
+    
+    # خيارات إزالة العلامة المائية
+    remove_wm = st.checkbox("🧹 تفعيل ميزة إزالة / تمويه العلامة المائية (Delogo)")
+    
+    delogo_filter = ""
+    if remove_wm:
+        wm_position = st.selectbox(
+            "📍 اختر موضع الشعار أو العلامة المائية:",
+            [
+                "علامة تيك توك التلقائية (أعلى اليسار + أسفل اليمين)",
+                "أعلى اليسار",
+                "أعلى اليمين",
+                "أسفل اليسار",
+                "أسفل اليمين",
+                "موضع مخصص (تحديد يدوي)"
+            ]
+        )
+        
+        if wm_position == "علامة تيك توك التلقائية (أعلى اليسار + أسفل اليمين)":
+            delogo_filter = f",delogo=x=20:y=30:w=260:h=110,delogo=x={target_w - 280}:y={target_h - 140}:w=260:h=110"
+        elif wm_position == "أعلى اليسار":
+            delogo_filter = ",delogo=x=20:y=30:w=280:h=120"
+        elif wm_position == "أعلى اليمين":
+            delogo_filter = f",delogo=x={target_w - 300}:y=30:w=280:h=120"
+        elif wm_position == "أسفل اليسار":
+            delogo_filter = f",delogo=x=20:y={target_h - 150}:w=280:h=120"
+        elif wm_position == "أسفل اليمين":
+            delogo_filter = f",delogo=x={target_w - 300}:y={target_h - 150}:w=280:h=120"
+        else: # موضع مخصص
+            col_x, col_y = st.columns(2)
+            with col_x:
+                custom_x = st.slider("الإحداثي الأفقي (X):", 0, target_w - 100, 50)
+                custom_w = st.slider("عرض منطقة التمويه (W):", 50, 500, 200)
+            with col_y:
+                custom_y = st.slider("الإحداثي الرأسي (Y):", 0, target_h - 50, 50)
+                custom_h = st.slider("ارتفاع منطقة التمويه (H):", 30, 300, 100)
+            delogo_filter = f",delogo=x={custom_x}:y={custom_y}:w={custom_w}:h={custom_h}"
+
+    if st.button("🚀 ابدأ المعالجة وإزالة العلامة المائية الآن"):
+        with st.spinner("جاري المعالجة وإعادة التشكيل... يرجى الانتظار ثوانٍ"):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # بناء فلتر FFmpeg حسب النمط المختار
+            # بناء الفلتر
             if style_code == "blur":
-                # GhostCut Blur style: خلفية مكبرة ومموهة + الفيديو الأصلي فوقها بالمنتصف
                 vf_filter = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
                     f"crop={target_w}:{target_h},gblur=sigma=25[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{delogo_filter}"
                 )
             elif style_code == "crop":
-                # قص ملء الشاشة مع التوسيط
                 vf_filter = (
                     f"scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}"
+                    f"crop={target_w}:{target_h}{delogo_filter}"
                 )
-            else: # fit / black bars
+            else: # fit
                 vf_filter = (
                     f"scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black"
+                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{delogo_filter}"
                 )
 
-            # أمر FFmpeg للمعالجة السريعة
             cmd = [
                 "ffmpeg", "-y",
                 "-i", input_path,
@@ -130,19 +165,18 @@ if uploaded_file is not None:
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
-                st.success("✅ تمت معالجة الفيديو بنجاح!")
+                st.success("✅ تمت المعالجة وإزالة الشعار بنجاح!")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الجاهز",
+                        label="⬇️ تحميل المقطع بدون علامة مائية",
                         data=f,
-                        file_name=f"processed_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"clean_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
             except Exception as e:
-                st.error("حدث خطأ أثناء المعالجة. تأكد من سلامة ملف الفيديو.")
+                st.error("حدث خطأ أثناء المعالجة، تأكد من سلامة ملف الفيديو.")
             finally:
-                # تنظيف الملفات المؤقتة
                 if os.path.exists(input_path):
                     os.remove(input_path)
