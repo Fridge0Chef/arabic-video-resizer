@@ -131,33 +131,33 @@ if uploaded_file is not None:
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # بناء الفلاتر مع تصحيح الأبعاد الزوجية التلقائي
+            # بناء مصفوفة المعالجة السحابية
             if style_code == "blur":
-                vf_filter = (
+                filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
                     f"crop={target_w}:{target_h},boxblur=20:20[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{delogo_filter}"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{delogo_filter}[outv]"
                 )
             elif style_code == "crop":
-                vf_filter = (
-                    f"scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}{delogo_filter}"
+                filter_complex = (
+                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
+                    f"crop={target_w}:{target_h}{delogo_filter}[outv]"
                 )
             else: # fit
-                vf_filter = (
-                    f"scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
+                filter_complex = (
+                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
-                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{delogo_filter}"
+                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{delogo_filter}[outv]"
                 )
 
             cmd = [
                 "ffmpeg", "-y",
                 "-i", input_path,
-                "-vf", vf_filter,
-                "-map", "0:v:0",
-                "-map", "0:a:0?",
+                "-filter_complex", filter_complex,
+                "-map", "[outv]",
+                "-map", "0:a?",
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
                 "-preset", "veryfast",
@@ -175,7 +175,7 @@ if uploaded_file is not None:
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع بدون علامة مائية",
+                        label="⬇️ تحميل المقطع المعالج",
                         data=f,
                         file_name=f"clean_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
