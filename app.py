@@ -10,48 +10,27 @@ st.set_page_config(
     layout="centered"
 )
 
-# تخصيص واجهة عربية حديثة ودعم RTL
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-    
     html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox, .stCheckbox, .stSlider {
         font-family: 'Cairo', sans-serif !important;
         direction: rtl;
         text-align: right;
     }
-    .main-title {
-        text-align: center;
-        font-weight: 800;
-        color: #1E293B;
-        margin-bottom: 0.5rem;
-    }
-    .sub-title {
-        text-align: center;
-        color: #64748B;
-        margin-bottom: 2rem;
-    }
+    .main-title { text-align: center; font-weight: 800; color: #1E293B; margin-bottom: 0.5rem; }
+    .sub-title { text-align: center; color: #64748B; margin-bottom: 2rem; }
     div.stButton > button {
-        width: 100%;
-        background-color: #2563EB;
-        color: white;
-        font-weight: 700;
-        border-radius: 10px;
-        padding: 0.6rem 1rem;
-        border: none;
-        transition: all 0.3s;
+        width: 100%; background-color: #2563EB; color: white; font-weight: 700;
+        border-radius: 10px; padding: 0.6rem 1rem; border: none;
     }
-    div.stButton > button:hover {
-        background-color: #1D4ED8;
-        color: white;
-    }
+    div.stButton > button:hover { background-color: #1D4ED8; color: white; }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو وإزالة العلامات المائية</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">عدّل مقاطعك للمنصات وأزل الشعارات والعلامات المائية بضغطة زر واحدة</p>', unsafe_allow_html=True)
 
-# أبعاد المنصات
 PLATFORMS = {
     "تيك توك / سناب شات / يوتيوب شورتس (9:16)": {"w": 1080, "h": 1920, "name": "9_16_Vertical"},
     "ريلز إنستقرام (9:16)": {"w": 1080, "h": 1920, "name": "Reels_9_16"},
@@ -60,14 +39,12 @@ PLATFORMS = {
     "يوتيوب كلاسيكي أفقي (16:9)": {"w": 1920, "h": 1080, "name": "Landscape_16_9"},
 }
 
-# أنماط ملء الشاشة
 STYLES = {
-    "خلفية ضبابية ذكية (Blurred Background)": "blur",
+    "خلفية ضبابية سريعة (Fast Blur)": "blur",
     "قص وتكبير لملء الشاشة (Center Crop)": "crop",
-    "إضافة إطار أسود كلاسيكي (Fit with Black Bars)": "fit"
+    "إضافة إطار أسود كلاسيكي (Fit Black Bars)": "fit"
 }
 
-# 1. رفع المقطع
 uploaded_file = st.file_uploader("اختر مقطع الفيديو أو اسحبه هنا (MP4, MOV, MKV)", type=["mp4", "mov", "mkv"])
 
 if uploaded_file is not None:
@@ -86,7 +63,6 @@ if uploaded_file is not None:
 
     st.divider()
     
-    # خيارات إزالة العلامة المائية
     remove_wm = st.checkbox("🧹 تفعيل ميزة إزالة / تمويه العلامة المائية (Delogo)")
     
     delogo_filter = ""
@@ -124,18 +100,18 @@ if uploaded_file is not None:
             delogo_filter = f",delogo=x={custom_x}:y={custom_y}:w={custom_w}:h={custom_h}"
 
     if st.button("🚀 ابدأ المعالجة وإزالة العلامة المائية الآن"):
-        with st.spinner("جاري المعالجة وإعادة التشكيل... يرجى الانتظار ثوانٍ"):
+        with st.spinner("جاري المعالجة السريعة..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # بناء مصفوفة المعالجة السحابية
+            # معالجة فائقة السرعة للتمويه بتصغير الدقة ثم تكبيرها
             if style_code == "blur":
                 filter_complex = (
-                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h},boxblur=20:20[bg];"
+                    f"[0:v]scale=180:320:force_original_aspect_ratio=increase,boxblur=5:5,"
+                    f"scale={target_w}:{target_h}[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{delogo_filter}[outv]"
@@ -145,7 +121,7 @@ if uploaded_file is not None:
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
                     f"crop={target_w}:{target_h}{delogo_filter}[outv]"
                 )
-            else: # fit
+            else:
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
@@ -154,14 +130,16 @@ if uploaded_file is not None:
 
             cmd = [
                 "ffmpeg", "-y",
+                "-threads", "0",
                 "-i", input_path,
                 "-filter_complex", filter_complex,
                 "-map", "[outv]",
                 "-map", "0:a?",
                 "-c:v", "libx264",
+                "-preset", "ultrafast",
+                "-tune", "fastdecode",
                 "-pix_fmt", "yuv420p",
-                "-preset", "veryfast",
-                "-crf", "22",
+                "-crf", "23",
                 "-c:a", "aac",
                 "-b:a", "128k",
                 output_path
@@ -170,7 +148,7 @@ if uploaded_file is not None:
             try:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
-                st.success("✅ تمت المعالجة وإزالة الشعار بنجاح!")
+                st.success("✅ تمت المعالجة بنجاح وبسرعة فائقة!")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
@@ -182,8 +160,8 @@ if uploaded_file is not None:
                     )
             except subprocess.CalledProcessError as e:
                 err_msg = e.stderr.decode('utf-8', errors='ignore')
-                st.error("حدث خطأ أثناء معالجة الفيديو بواسطة FFmpeg:")
-                st.code(err_msg[-400:] if len(err_msg) > 400 else err_msg)
+                st.error("حدث خطأ أثناء معالجة الفيديو:")
+                st.code(err_msg[-300:] if len(err_msg) > 300 else err_msg)
             finally:
                 if os.path.exists(input_path):
                     os.remove(input_path)
