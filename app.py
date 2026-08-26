@@ -64,6 +64,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# دالة سريعة لحساب مدة الفيديو بدقة
+def get_video_duration(path):
+    try:
+        cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=5)
+        return float(res.stdout.strip())
+    except Exception:
+        return 10.0
+
 # ----------------- الإعدادات الافتراضية للحسابات -----------------
 with st.popover("⚙️ تعديل الحسابات المحفوظة"):
     st.markdown("#### ⚙️ الحسابات الافتراضية")
@@ -95,7 +104,7 @@ if st.session_state.get("yt", "abu10shaher").strip():
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو النشر الفيروسي وتجهيز المقاطع</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">كسر بصمة التكرار، فيسات تفاعلية تلقائية، وتغطية الشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">شريط التقدم، تحسين الجودة، كسر البصمة، وتغطية الشعارات بضغطة زر</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -130,30 +139,18 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # خيارات كسر البصمة والفيسات التلقائية (مفعلة تلقائياً لراحتك)
-    col_v1, col_v2 = st.columns(2)
-    with col_v1:
-        enable_anti_copy = st.checkbox("🛡️ كسر بصمة التكرار (تخطي حظر النسخ والإكسبلور)", value=True)
-    with col_v2:
-        enable_auto_emojis = st.checkbox("🎭 وضع فيسات تفاعلية تلقائياً على المقطع", value=True)
-
-    # اختيار نمط الفيسات التلقائي
-    chosen_emoji_set = "😂 🔥"
-    if enable_auto_emojis:
-        emoji_options = {
-            "🎲 عشوائي ذكي (تلقائي)": random.choice(["😂 🔥", "😱 🤯", "👀 💯", "👏 😂", "⚡ 💥"]),
-            "😂 ضحك وتفاعل (😂 🔥)": "😂 🔥",
-            "😱 صدمة وإثارة (😱 🤯)": "😱 🤯",
-            "👀 انتباه وتركيز (👀 💯)": "👀 💯",
-            "⚡ حماس وسرعة (⚡ 💥)": "⚡ 💥"
-        }
-        emoji_choice = st.selectbox("نوع الفيسات التفاعلية:", list(emoji_options.keys()))
-        chosen_emoji_set = emoji_options[emoji_choice]
-
-    st.divider()
+    # أدوات تعزيز الخوارزميات (Retention & Quality Boosters)
+    col_k1, col_k2, col_k3 = st.columns(3)
+    with col_k1:
+        enable_progress_bar = st.checkbox("📊 شريط التقدم المتحرك", value=True)
+    with col_k2:
+        enable_hd_boost = st.checkbox("✨ وضوح ونقاء الصوت", value=True)
+    with col_k3:
+        enable_auto_emojis = st.checkbox("🎭 فيسات تفاعلية", value=True)
 
     # شريط العنوان الجذاب
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
+    hook_text = ""
     hook_filter = ""
     if enable_hook:
         hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد للنهاية 😱🔥")
@@ -161,7 +158,7 @@ if uploaded_file is not None:
             clean_hook = hook_text.strip().replace(":", "\\:").replace("'", "")
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=60:fontsize=28:fontcolor=black:box=1:boxcolor=yellow@0.95:boxborderw=10"
 
-    # وضع وحماية الحساب مع التغطية الواسعة
+    # وضع وحماية الحساب
     enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم تماماً", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
@@ -198,51 +195,54 @@ if uploaded_file is not None:
         elif acc_pos == "أسفل اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=h-th-50:{box_style}"
 
-    # إضافة شارة الفيسات البصرية
+    # الفيسات التفاعلية
     emoji_filter = ""
-    if enable_auto_emojis and chosen_emoji_set:
-        emoji_filter = f",drawtext=text='{chosen_emoji_set}':x=w-tw-30:y=40:fontsize=34:box=1:boxcolor=black@0.75:boxborderw=8"
+    if enable_auto_emojis:
+        random_emoji = random.choice(["😂 🔥", "😱 🤯", "👀 💯", "👏 😂", "⚡ 💥"])
+        emoji_filter = f",drawtext=text='{random_emoji}':x=w-tw-30:y=40:fontsize=34:box=1:boxcolor=black@0.75:boxborderw=8"
 
-    all_text_filters = f"{hook_filter}{stamp_filter}{emoji_filter}"
-
-    if st.button("🚀 معالجة فورية وكسر البصمة للنشر"):
-        with st.spinner("جاري كسر البصمة وإضافة التفاعلات وتجهيز المقطع للنشر..."):
+    if st.button("🚀 معالجة فورية وتعزيز المقطع للنشر"):
+        with st.spinner("جاري تعزيز الخوارزميات وتجهيز المقطع للنشر..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
+            duration = get_video_duration(input_path)
 
-            # تعديلات كسر البصمة اللونية للمحتوى
-            color_grade = ",eq=saturation=1.04:contrast=1.03:brightness=0.01" if enable_anti_copy else ""
+            # شريط التقدم المتحرك التلقائي
+            progress_bar_filter = f",drawbox=x=0:y=h-8:w=iw*t/{duration}:h=8:color=red@0.95:t=fill" if enable_progress_bar else ""
+            all_text_filters = f"{hook_filter}{stamp_filter}{emoji_filter}{progress_bar_filter}"
+
+            # تحسين الجودة والحدة
+            quality_enhancement = ",unsharp=3:3:0.6:3:3:0.0,eq=saturation=1.06:contrast=1.04:brightness=0.01" if enable_hd_boost else ""
 
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{color_grade}[fg];"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{quality_enhancement}[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             elif style_code == "podcast_card":
                 filter_complex = (
                     f"color=c=#0B0F17:s={target_w}x{target_h}[bg];"
                     f"[0:v]scale={target_w}-40:{target_h}-180:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{color_grade}[fg];"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{quality_enhancement}[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             elif style_code == "crop":
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}{color_grade}{all_text_filters}[outv]"
+                    f"crop={target_w}:{target_h}{quality_enhancement}{all_text_filters}[outv]"
                 )
             else:
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{color_grade},"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{quality_enhancement},"
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{all_text_filters}[outv]"
                 )
 
-            # تجهيز أمر FFmpeg وحذف البيانات القديمة مع تعديل السرعة الخفي
             cmd = [
                 "ffmpeg", "-y",
                 "-threads", "0",
@@ -255,9 +255,10 @@ if uploaded_file is not None:
                 "-preset", "ultrafast",
                 "-tune", "zerolatency",
                 "-pix_fmt", "yuv420p",
-                "-crf", "28",
+                "-crf", "26",
+                "-af", "volume=1.25",
                 "-c:a", "aac",
-                "-b:a", "96k",
+                "-b:a", "128k",
                 output_path
             ]
 
@@ -265,16 +266,31 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"🎉 تم تجهيز الفيديو وكسر بصمته بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"🎉 تم تجهيز الفيديو واكتمال التحسين الخوارزمي! ({file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الحصري الجاهز للنشر",
+                        label="⬇️ تحميل المقطع الجاهز للنشر",
                         data=f,
-                        file_name=f"viral_unique_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"viral_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
+
+                # ----------------- مولّد الكابشن والهاشتاقات الفيروسية الجاهز للنسخ -----------------
+                st.divider()
+                st.markdown("### 📋 الكابشن والهاشتاقات الفيروسية (جاهزة للنسخ والنشر)")
+                
+                base_title = hook_text.strip() if hook_text.strip() else "شاهد للنهاية وعطنا رأيك! 👀👇"
+                viral_caption = f"""{base_title}
+.
+شاركنا رأيك بالتعليقات 💬👇
+.
+#ترند #اكسبلور #السعودية #explore #fyp #viral #foryou #reels #تيك_توك #shorts"""
+                
+                st.code(viral_caption, language="text")
+                st.caption("💡 انسخ النص أعلاه والصقه مباشرة في خانة وصف الفيديو عند النشر.")
+
             except subprocess.CalledProcessError as e:
                 err_msg = e.stderr.decode('utf-8', errors='ignore')
                 st.error("حدث خطأ أثناء معالجة الفيديو:")
