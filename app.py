@@ -56,29 +56,34 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- الشريط العلوي مع أيقونة الإعدادات -----------------
+# ----------------- زر الإعدادات العلوي -----------------
 head_col1, head_col2 = st.columns([1, 7])
 with head_col1:
     with st.popover("⚙️"):
         st.markdown("#### ⚙️ حفظ حساباتك")
-        snap_handle = st.text_input("👻 سناب شات:", key="snap", placeholder="@user_snap")
-        tiktok_handle = st.text_input("🎵 تيك توك:", key="tiktok", placeholder="@user_tiktok")
-        ig_handle = st.text_input("📸 إنستقرام:", key="ig", placeholder="@user_ig")
-        x_handle = st.text_input("𝕏 منصة إكس:", key="x", placeholder="@user_x")
-        yt_handle = st.text_input("▶️ يوتيوب:", key="yt", placeholder="@channel_yt")
+        snap_handle = st.text_input("👻 سناب شات:", key="snap", placeholder="shared.2017")
+        tiktok_handle = st.text_input("🎵 تيك توك:", key="tiktok", placeholder="user_tiktok")
+        ig_handle = st.text_input("📸 إنستقرام:", key="ig", placeholder="user_ig")
+        x_handle = st.text_input("𝕏 منصة إكس:", key="x", placeholder="user_x")
+        yt_handle = st.text_input("▶️ يوتيوب:", key="yt", placeholder="channel_yt")
 
-# تجميع الحسابات
+# تجميع الحسابات المحفوظة
 saved_accounts = {}
 if st.session_state.get("snap", "").strip():
-    saved_accounts[f"👻 سناب شات ({st.session_state.snap.strip()})"] = f"Snap: {st.session_state.snap.strip()}"
+    clean_snap = st.session_state.snap.strip().lstrip('@')
+    saved_accounts[f"👻 سناب شات (@{clean_snap})"] = f"Snap @{clean_snap}"
 if st.session_state.get("tiktok", "").strip():
-    saved_accounts[f"🎵 تيك توك ({st.session_state.tiktok.strip()})"] = f"TikTok: {st.session_state.tiktok.strip()}"
+    clean_tt = st.session_state.tiktok.strip().lstrip('@')
+    saved_accounts[f"🎵 تيك توك (@{clean_tt})"] = f"TikTok @{clean_tt}"
 if st.session_state.get("ig", "").strip():
-    saved_accounts[f"📸 إنستقرام ({st.session_state.ig.strip()})"] = f"IG: {st.session_state.ig.strip()}"
+    clean_ig = st.session_state.ig.strip().lstrip('@')
+    saved_accounts[f"📸 إنستقرام (@{clean_ig})"] = f"IG @{clean_ig}"
 if st.session_state.get("x", "").strip():
-    saved_accounts[f"𝕏 منصة إكس ({st.session_state.x.strip()})"] = f"X: {st.session_state.x.strip()}"
+    clean_x = st.session_state.x.strip().lstrip('@')
+    saved_accounts[f"𝕏 منصة إكس (@{clean_x})"] = f"X @{clean_x}"
 if st.session_state.get("yt", "").strip():
-    saved_accounts[f"▶️ يوتيوب ({st.session_state.yt.strip()})"] = f"YouTube: {st.session_state.yt.strip()}"
+    clean_yt = st.session_state.yt.strip().lstrip('@')
+    saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو ووضع الحسابات</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الشعار القديم، وضع حسابك المفضل بضغطة زر</p>', unsafe_allow_html=True)
@@ -123,17 +128,17 @@ if uploaded_file is not None:
         target_w = PLATFORMS[selected_platform]["w_low"]
         target_h = PLATFORMS[selected_platform]["h_low"]
         crf_val = "28"
-        font_size = "24"
+        font_size = "26"
     elif "حجم متوازن" in size_mode:
         target_w = PLATFORMS[selected_platform]["w"]
         target_h = PLATFORMS[selected_platform]["h"]
         crf_val = "24"
-        font_size = "34"
+        font_size = "36"
     else:
         target_w = PLATFORMS[selected_platform]["w"]
         target_h = PLATFORMS[selected_platform]["h"]
         crf_val = "20"
-        font_size = "34"
+        font_size = "36"
 
     style_code = STYLES[selected_style]
 
@@ -161,20 +166,19 @@ if uploaded_file is not None:
                     ]
                 )
 
-            final_text = saved_accounts[chosen_label]
+            final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
             box_style = f"box=1:boxcolor=black@0.85:boxborderw=12:fontcolor=white:fontsize={font_size}"
             
             if acc_pos == "تغطية علامة تيك توك (أعلى اليسار)":
-                extra_filters += f",drawtext=text='{final_text}':x=30:y=40:{box_style}"
+                extra_filters = f",drawtext=text='{final_text}':x=30:y=40:{box_style}"
             elif acc_pos == "تغطية علامة تيك توك السفلية (أسفل اليمين)":
-                extra_filters += f",drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
+                extra_filters = f",drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
             elif acc_pos == "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)":
-                extra_filters += f",drawtext=text='{final_text}':x=30:y=40:{box_style}"
-                extra_filters += f",drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
+                extra_filters = f",drawtext=text='{final_text}':x=30:y=40:{box_style},drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
             elif acc_pos == "أعلى اليمين":
-                extra_filters += f",drawtext=text='{final_text}':x=w-tw-40:y=40:{box_style}"
+                extra_filters = f",drawtext=text='{final_text}':x=w-tw-40:y=40:{box_style}"
             elif acc_pos == "أسفل اليسار":
-                extra_filters += f",drawtext=text='{final_text}':x=30:y=h-th-80:{box_style}"
+                extra_filters = f",drawtext=text='{final_text}':x=30:y=h-th-80:{box_style}"
 
     if st.button("🚀 معالجة وتثبيت الحساب على المقطع"):
         with st.spinner("جاري التعديل وإضافة الحساب..."):
@@ -206,14 +210,12 @@ if uploaded_file is not None:
 
             cmd = [
                 "ffmpeg", "-y",
-                "-threads", "0",
                 "-i", input_path,
                 "-filter_complex", filter_complex,
                 "-map", "[outv]",
                 "-map", "0:a?",
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
-                "-tune", "fastdecode",
                 "-pix_fmt", "yuv420p",
                 "-crf", crf_val,
                 "-c:a", "aac",
