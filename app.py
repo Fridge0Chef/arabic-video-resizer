@@ -111,7 +111,7 @@ if st.session_state.get("yt", "abu10shaher").strip():
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">قص تلقائي، أبعاد مخصصة، عناوين جذابة، واستبدال الحسابات بضغطة زر</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">أنماط سينمائية جذابة، قص ذكي تلقائي، واستبدال الحسابات بضغطة زر</p>', unsafe_allow_html=True)
 
 # ----------------- خيارات المنصات -----------------
 PLATFORMS = {
@@ -122,10 +122,12 @@ PLATFORMS = {
     "يوتيوب كلاسيكي (أفقي 16:9)": {"w": 1920, "h": 1080, "w_low": 1280, "h_low": 720, "name": "Landscape_16_9"},
 }
 
+# أنماط العرض والتنسيق الاحترافية الفيرال
 STYLES = {
-    "خلفية ضبابية ذكية (تمويه سينمائي)": "blur",
-    "قص وتكبير لملء كامل الشاشة": "crop",
-    "إضافة إطار أسود كلاسيكي": "fit"
+    "🌟 تمويه ضبابي سينمائي (تعتيم ذكي وتركيز عالي)": "blur_glow",
+    "🎙️ إطار استوديو البودكاست الحديث (خلفية فحمية ملكية)": "podcast_card",
+    "⚡ ملء الشاشة الذكي الكامل (بدون أي هوامش)": "crop",
+    "⬛ إطار أسود كلاسيكي نقي": "fit"
 }
 
 uploaded_file = st.file_uploader("اختر مقطع الفيديو أو اسحبه هنا:", type=["mp4", "mov", "mkv"])
@@ -138,7 +140,7 @@ if uploaded_file is not None:
     with col1:
         selected_platform = st.selectbox("🎯 اختر المنصة المستهدفة:", list(PLATFORMS.keys()))
     with col2:
-        selected_style = st.selectbox("🎨 نمط العرض والتنسيق:", list(STYLES.keys()))
+        selected_style = st.selectbox("🎨 نمط التنسيق والإخراج الاحترافي:", list(STYLES.keys()))
 
     size_mode = st.radio(
         "📦 خيارات المساحة وحجم الملف النهائي:",
@@ -176,7 +178,7 @@ if uploaded_file is not None:
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
     hook_filter = ""
     if enable_hook:
-        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد للنهاية 😱🔥")
+        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: سر خطير لا يفوتك 😱🔥")
         col_h1, col_h2 = st.columns(2)
         with col_h1:
             hook_bg = st.selectbox("لون خلفية الشريط:", ["أصفر 🟨", "أسود ⬛", "أحمر 🟥", "أبيض ⬜"])
@@ -232,14 +234,14 @@ if uploaded_file is not None:
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
     if st.button("🚀 معالجة وتجهيز المقطع الآن"):
-        with st.spinner("جاري التحليل الذكي وقص الأجزاء الزائدة وتطبيق التعديلات..."):
+        with st.spinner("جاري التحليل وتطبيق الإخراج السينمائي الذكي..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # تحليل تلقائي للقص الذكي (إذا كان مفعلاً)
+            # تحليل تلقائي للقص الذكي
             trim_start = 0.0
             trim_end = 0.0
             if enable_auto_trim:
@@ -269,11 +271,19 @@ if uploaded_file is not None:
                 except Exception:
                     pass
 
-            if style_code == "blur":
+            # بناء الفلاتر الإخراجية السينمائية
+            if style_code == "blur_glow":
                 filter_complex = (
-                    f"[0:v]scale=120:213:force_original_aspect_ratio=increase,boxblur=4:4,"
-                    f"scale={target_w}:{target_h}[bg];"
+                    f"[0:v]scale=120:213:force_original_aspect_ratio=increase,boxblur=5:5,"
+                    f"scale={target_w}:{target_h},eq=brightness=-0.10:saturation=1.2[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
+                )
+            elif style_code == "podcast_card":
+                filter_complex = (
+                    f"color=c=#0B0F17:s={target_w}x{target_h}[bg];"
+                    f"[0:v]scale={target_w}-60:{target_h}-260:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
@@ -282,7 +292,7 @@ if uploaded_file is not None:
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
                     f"crop={target_w}:{target_h}{all_text_filters}[outv]"
                 )
-            else:
+            else: # fit
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
@@ -313,7 +323,7 @@ if uploaded_file is not None:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"✅ تمت المعالجة والقص الذكي بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"✅ تمت المعالجة والإخراج بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
