@@ -7,7 +7,8 @@ import tempfile
 st.set_page_config(
     page_title="مُحرر وقاص الفيديوهات الذكي",
     page_icon="🎬",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="expanded"
 )
 
 # تخصيص واجهة عصرية ودعم اللغة العربية
@@ -26,13 +27,40 @@ st.markdown("""
         border-radius: 10px; padding: 0.6rem 1rem; border: none; transition: 0.3s;
     }
     div.stButton > button:hover { background-color: #1D4ED8; color: white; }
+    [data-testid="stSidebar"] {
+        direction: rtl;
+        text-align: right;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو واستبدال الحسابات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الحساب القديم، وضع معرّف حساباتك الشخصية مكانه</p>', unsafe_allow_html=True)
+# ----------------- الشريط الجانبي لحفظ الحسابات لمرة واحدة -----------------
+st.sidebar.markdown("### ⚙️ حفظ حساباتك (لمرة واحدة)")
+st.sidebar.write("أدخل معرّفاتك هنا مرة واحدة وستجدها جاهزة للاختيار دائماً:")
 
-# أبعاد المنصات
+snap_handle = st.sidebar.text_input("👻 سناب شات:", placeholder="@user_snap")
+tiktok_handle = st.sidebar.text_input("🎵 تيك توك:", placeholder="@user_tiktok")
+ig_handle = st.sidebar.text_input("📸 إنستقرام:", placeholder="@user_ig")
+x_handle = st.sidebar.text_input("𝕏 منصة إكس:", placeholder="@user_x")
+yt_handle = st.sidebar.text_input("▶️ يوتيوب:", placeholder="@channel_yt")
+
+# تجميع الحسابات المحفوظة
+saved_accounts = {}
+if snap_handle.strip():
+    saved_accounts[f"👻 سناب شات ({snap_handle.strip()})"] = f"Snap: {snap_handle.strip()}"
+if tiktok_handle.strip():
+    saved_accounts[f"🎵 تيك توك ({tiktok_handle.strip()})"] = f"TikTok: {tiktok_handle.strip()}"
+if ig_handle.strip():
+    saved_accounts[f"📸 إنستقرام ({ig_handle.strip()})"] = f"IG: {ig_handle.strip()}"
+if x_handle.strip():
+    saved_accounts[f"𝕏 منصة إكس ({x_handle.strip()})"] = f"X: {x_handle.strip()}"
+if yt_handle.strip():
+    saved_accounts[f"▶️ يوتيوب ({yt_handle.strip()})"] = f"YouTube: {yt_handle.strip()}"
+
+# ----------------- الواجهة الرئيسية -----------------
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو ووضع الحسابات</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الشعار القديم، وضع حسابك المفضل بضغطة زر</p>', unsafe_allow_html=True)
+
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "9_16_Vertical"},
     "ريلز إنستقرام (9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "Reels_9_16"},
@@ -42,12 +70,11 @@ PLATFORMS = {
 }
 
 STYLES = {
-    "خلفية ضبابية سريعة (Blurred Background)": "blur",
+    "خلفية ضبابية ذكية (Blurred Background)": "blur",
     "قص وتكبير لملء الشاشة (Center Crop)": "crop",
     "إضافة إطار أسود كلاسيكي (Fit Black Bars)": "fit"
 }
 
-# 1. رفع المقطع
 uploaded_file = st.file_uploader("اختر مقطع الفيديو أو اسحبه هنا (MP4, MOV, MKV)", type=["mp4", "mov", "mkv"])
 
 if uploaded_file is not None:
@@ -60,7 +87,6 @@ if uploaded_file is not None:
     with col2:
         selected_style = st.selectbox("🎨 نمط ملء الشاشة:", list(STYLES.keys()))
 
-    # خيار ضغط الحجم
     size_mode = st.radio(
         "📦 خيار حجم ومساحة الملف النهائي:",
         [
@@ -90,43 +116,30 @@ if uploaded_file is not None:
 
     st.divider()
     
-    # 2. ميزة استبدال الشعار بحساباتك
-    replace_account = st.checkbox("✨ استبدال الحساب / العلامة المائية بحساباتي الخاصة", value=True)
+    # خيار وضع الحساب المحفوظ
+    enable_stamp = st.checkbox("✨ وضع أحد حساباتي المحفوظة فوق الفيديو", value=True)
     
     extra_filters = ""
-    if replace_account:
-        st.write("📝 **أدخل حساباتك لتغطية الحساب القديم في المقطع:**")
-        
-        col_acc1, col_acc2 = st.columns(2)
-        with col_acc1:
-            platform_type = st.selectbox("نوع الحساب:", ["سناب شات 👻", "تيك توك 🎵", "يوتيوب ▶️", "إنستقرام 📸", "منصة إكس 𝕏", "معرّف مخصص 🏷️"])
-            my_handle = st.text_input("اسم حسابك (مثال: @YourUser):", placeholder="@اسم_حسابك")
-        with col_acc2:
-            acc_pos = st.selectbox(
-                "📍 مكان وضع حسابك:",
-                [
-                    "تغطية علامة تيك توك (أعلى اليسار)",
-                    "تغطية علامة تيك توك السفلية (أسفل اليمين)",
-                    "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)",
-                    "أعلى اليمين",
-                    "أسفل اليسار"
-                ]
-            )
+    if enable_stamp:
+        if not saved_accounts:
+            st.info("💡 اكتب معرّف حسابك أولاً في القائمة الجانبية (يمين الشاشة) ليظهر لك هنا.")
+        else:
+            col_sel1, col_sel2 = st.columns(2)
+            with col_sel1:
+                chosen_label = st.selectbox("👤 اختر الحساب المراد وضعه:", list(saved_accounts.keys()))
+            with col_sel2:
+                acc_pos = st.selectbox(
+                    "📍 موضع وضع الحساب في المقطع:",
+                    [
+                        "تغطية علامة تيك توك (أعلى اليسار)",
+                        "تغطية علامة تيك توك السفلية (أسفل اليمين)",
+                        "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)",
+                        "أعلى اليمين",
+                        "أسفل اليسار"
+                    ]
+                )
 
-        # تجهيز النص المكتوب
-        icon_prefix = {
-            "سناب شات 👻": "Snap: ",
-            "تيك توك 🎵": "TikTok: ",
-            "يوتيوب ▶️": "YouTube: ",
-            "إنستقرام 📸": "IG: ",
-            "منصة إكس 𝕏": "X: ",
-            "معرّف مخصص 🏷️": ""
-        }[platform_type]
-
-        final_text = f"{icon_prefix}{my_handle.strip()}" if my_handle.strip() else ""
-
-        if final_text:
-            # فلتر رسم شريط أسود أنيق وكتابة الحساب الجديد فوقه
+            final_text = saved_accounts[chosen_label]
             box_style = f"box=1:boxcolor=black@0.85:boxborderw=12:fontcolor=white:fontsize={font_size}"
             
             if acc_pos == "تغطية علامة تيك توك (أعلى اليسار)":
@@ -141,15 +154,14 @@ if uploaded_file is not None:
             elif acc_pos == "أسفل اليسار":
                 extra_filters += f",drawtext=text='{final_text}':x=30:y=h-th-80:{box_style}"
 
-    if st.button("🚀 معالجة الفيديو ووضع حسابي الآن"):
-        with st.spinner("جاري إخفاء الحساب القديم ووضع حسابك الجديد..."):
+    if st.button("🚀 معالجة وتثبيت الحساب على المقطع"):
+        with st.spinner("جاري التعديل وإضافة الحساب..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # بناء الفلاتر
             if style_code == "blur":
                 filter_complex = (
                     f"[0:v]scale=120:213:force_original_aspect_ratio=increase,boxblur=4:4,"
@@ -189,15 +201,14 @@ if uploaded_file is not None:
 
             try:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"✅ تم وضع حسابك بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"✅ تمت المعالجة بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع بحسابك الجديد",
+                        label="⬇️ تحميل المقطع بالحساب المحدد",
                         data=f,
                         file_name=f"branded_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
