@@ -95,7 +95,7 @@ if st.session_state.get("yt", "abu10shaher").strip():
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">أنماط سينمائية، قص ذكي، وتغطية الشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">أنماط سينمائية، قص ذكي، وتغطية كاملة للشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -130,7 +130,7 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # خيارات القص والزوائد (تم إرجاعها بالكامل)
+    # خيارات القص والزوائد
     col_cut1, col_cut2 = st.columns(2)
     with col_cut1:
         enable_auto_trim = st.checkbox("✂️ قص الصمت والزوائد تلقائياً", value=True)
@@ -141,13 +141,13 @@ if uploaded_file is not None:
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
     hook_filter = ""
     if enable_hook:
-        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: سر خطير لا يفوتك 😱🔥")
+        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد للنهاية 😱🔥")
         if hook_text.strip():
             clean_hook = hook_text.strip().replace(":", "\\:").replace("'", "")
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=60:fontsize=28:fontcolor=black:box=1:boxcolor=yellow@0.95:boxborderw=10"
 
-    # وضع وحماية الحساب
-    enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم", value=True)
+    # وضع وحماية الحساب (مع تغطية واسعة جداً لمنطقة الحساب القديم)
+    enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم تماماً", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
         col_sel1, col_sel2 = st.columns(2)
@@ -157,7 +157,7 @@ if uploaded_file is not None:
             acc_pos = st.selectbox(
                 "📍 موضع الشارة:",
                 [
-                    "تغطية ذكية سريعة (أعلى اليسار + أسفل اليمين)",
+                    "تغطية ذكية واسعة (إخفاء تام للشعارات في الزوايا)",
                     "أعلى اليسار",
                     "أسفل اليمين",
                     "أعلى اليمين",
@@ -166,12 +166,13 @@ if uploaded_file is not None:
             )
 
         final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
-        box_style = "box=1:boxcolor=black@0.85:boxborderw=10:fontcolor=white:fontsize=24"
+        box_style = "box=1:boxcolor=black@0.90:boxborderw=10:fontcolor=white:fontsize=24"
         
-        if acc_pos == "تغطية ذكية سريعة (أعلى اليسار + أسفل اليمين)":
+        if acc_pos == "تغطية ذكية واسعة (إخفاء تام للشعارات في الزوايا)":
+            # تغطية مساحة واسعة في أسفل اليمين بالكامل لتشمل حساب Snapchat والشعار، وتغطية الأعلى، ووضع حسابك في الأعلى بوضوح
             stamp_filter = (
-                f",drawbox=x=15:y=20:w=200:h=70:color=black@0.75:t=fill"
-                f",drawbox=x={target_w-215}:y={target_h-90}:w=200:h=70:color=black@0.75:t=fill"
+                f",drawbox=x=0:y=0:w=320:h=110:color=black@0.90:t=fill"
+                f",drawbox=x={target_w-380}:y={target_h-160}:w=380:h=160:color=black@0.90:t=fill"
                 f",drawtext=text='{final_text}':x=(w-tw)/2:y=120:{box_style}"
             )
         elif acc_pos == "أعلى اليسار":
@@ -186,14 +187,13 @@ if uploaded_file is not None:
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
     if st.button("🚀 معالجة فائقة السرعة وتجهيز المقطع"):
-        with st.spinner("جاري التحليل السريع وقص الزوائد وتجهيز الفيديو..."):
+        with st.spinner("جاري مسح الشعارات القديمة وتجهيز الفيديو..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # تحليل سريع للقص التلقائي والخاتمة
             trim_start = 0.0
             trim_end = 0.0
             try:
@@ -222,7 +222,6 @@ if uploaded_file is not None:
             except Exception:
                 pass
 
-            # فلاتر الإخراج
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
@@ -274,7 +273,7 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تمت المعالجة بنجاح وسرعة فائقة! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تمت المعالجة وإخفاء الشعارات بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
