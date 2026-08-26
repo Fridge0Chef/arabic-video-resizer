@@ -11,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# تخصيص واجهة عربية كاملة + إخفاء شعار Streamlit والشريط السفلي + تصحيح الأيقونات
+# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -22,14 +22,12 @@ st.markdown("""
         text-align: right;
     }
     
-    /* إخفاء القوائم وشعار الاستضافة بالكامل */
     #MainMenu, footer, header, [data-testid="stHeader"], [data-testid="stToolbar"], 
     [data-testid="stStatusWidget"], div[class^="viewerBadge"], [data-testid="stDeployButton"] {
         display: none !important;
         visibility: hidden !important;
     }
     
-    /* حماية أيقونات النظام من التداخل مع الخط العربي */
     [data-testid="stIconMaterial"], .material-symbols-rounded, .material-symbols-outlined, [data-testid="stExpanderToggleIcon"] {
         font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
         direction: ltr !important;
@@ -97,7 +95,7 @@ if st.session_state.get("yt", "abu10shaher").strip():
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">أنماط سينمائية جذابة، قص ذكي تلقائي، واستبدال الحسابات بضغطة زر</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">أنماط سينمائية جذابة، قص ذكي تلقائي، وتغطية متقدمة للشعارات المتحركة</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "9_16_Vertical"},
@@ -186,20 +184,20 @@ if uploaded_file is not None:
             hook_font_size = font_size + 8
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=80:fontsize={hook_font_size}:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=14"
 
-    # وضع الحساب المحفوظ
-    enable_stamp = st.checkbox("✨ وضع أحد حساباتي لتغطية الشعار والحساب القديم", value=True)
+    # وضع وحماية الحساب (مع خيار التغطية الذكية الواسعة للشعارات المتحركة)
+    enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعارات والحسابات القديمة", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
         col_sel1, col_sel2 = st.columns(2)
         with col_sel1:
-            chosen_label = st.selectbox("👤 اختر الحساب المراد إبرازه:", list(saved_accounts.keys()))
+            chosen_label = st.selectbox("👤 اختر حسابك المراد وضعه:", list(saved_accounts.keys()))
         with col_sel2:
             acc_pos = st.selectbox(
-                "📍 موضع الشارة على الفيديو:",
+                "📍 وضعية الشارة وتغطية المتحرك:",
                 [
+                    "تغطية ذكية واسعة (لحجب الشعارات المتحركة في كل الزوايا)",
                     "تغطية علامة تيك توك (أعلى اليسار)",
                     "تغطية علامة تيك توك السفلية (أسفل اليمين)",
-                    "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)",
                     "أعلى اليمين",
                     "أسفل اليسار"
                 ]
@@ -208,12 +206,13 @@ if uploaded_file is not None:
         final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
         box_style = f"box=1:boxcolor=black@0.85:boxborderw=12:fontcolor=white:fontsize={font_size}"
         
-        if acc_pos == "تغطية علامة تيك توك (أعلى اليسار)":
+        if acc_pos == "تغطية ذكية واسعة (لحجب الشعارات المتحركة في كل الزوايا)":
+            # حجب كلا الزاويتين (أعلى اليسار وأسفل اليمين) لتغطية أي شعار متحرك، ووضع حسابك في المنتصف أو الأعلى بوضوح
+            stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=140:{box_style},delogo=x=10:y=20:w=260:h=100,delogo=x={target_w-280}:y={target_h-120}:w=260:h=100"
+        elif acc_pos == "تغطية علامة تيك توك (أعلى اليسار)":
             stamp_filter = f",drawtext=text='{final_text}':x=30:y=40:{box_style}"
         elif acc_pos == "تغطية علامة تيك توك السفلية (أسفل اليمين)":
             stamp_filter = f",drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
-        elif acc_pos == "تغطية العلامتين معاً (أعلى اليسار وأسفل اليمين)":
-            stamp_filter = f",drawtext=text='{final_text}':x=30:y=40:{box_style},drawtext=text='{final_text}':x=w-tw-40:y=h-th-80:{box_style}"
         elif acc_pos == "أعلى اليمين":
             stamp_filter = f",drawtext=text='{final_text}':x=w-tw-40:y=40:{box_style}"
         elif acc_pos == "أسفل اليسار":
@@ -222,14 +221,13 @@ if uploaded_file is not None:
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
     if st.button("🚀 معالجة وتجهيز المقطع الآن"):
-        with st.spinner("جاري التحليل وإزالة الزوائد وتجهيز الفيديو..."):
+        with st.spinner("جاري التحليل وتغطية الشعارات المتحركة وتجهيز الفيديو..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # تحليل مدة الفيديو وإزالة الزوائد
             trim_start = 0.0
             trim_end = 0.0
             try:
@@ -259,7 +257,6 @@ if uploaded_file is not None:
             except Exception:
                 pass
 
-            # بناء الفلاتر السينمائية
             if style_code == "blur_glow":
                 filter_complex = (
                     f"[0:v]scale=120:213:force_original_aspect_ratio=increase,boxblur=5:5,"
@@ -311,7 +308,7 @@ if uploaded_file is not None:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"✅ تمت المعالجة بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"✅ تمت المعالجة وتغطية الشعارات بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
