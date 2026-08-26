@@ -2,16 +2,16 @@ import streamlit as st
 import subprocess
 import os
 import tempfile
-import random
+import re
 
 # إعدادات الصفحة
 st.set_page_config(
-    page_title="استوديو الفيديو الذكي - الفيروسي",
+    page_title="استوديو تعديل الفيديو الذكي",
     page_icon="🎬",
     layout="centered"
 )
 
-# تخصيص واجهة عربية كاملة وحماية الأيقونات
+# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -64,15 +64,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# دالة سريعة لحساب مدة الفيديو بدقة
-def get_video_duration(path):
-    try:
-        cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=5)
-        return float(res.stdout.strip())
-    except Exception:
-        return 10.0
-
 # ----------------- الإعدادات الافتراضية للحسابات -----------------
 with st.popover("⚙️ تعديل الحسابات المحفوظة"):
     st.markdown("#### ⚙️ الحسابات الافتراضية")
@@ -103,8 +94,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو النشر الفيروسي وتجهيز المقاطع</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">شريط التقدم، تحسين الجودة، كسر البصمة، وتغطية الشعارات بضغطة زر</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">أنماط سينمائية، قص ذكي، وتغطية نظيفة للشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -139,18 +130,15 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # أدوات تعزيز الخوارزميات (Retention & Quality Boosters)
-    col_k1, col_k2, col_k3 = st.columns(3)
-    with col_k1:
-        enable_progress_bar = st.checkbox("📊 شريط التقدم المتحرك", value=True)
-    with col_k2:
-        enable_hd_boost = st.checkbox("✨ وضوح ونقاء الصوت", value=True)
-    with col_k3:
-        enable_auto_emojis = st.checkbox("🎭 فيسات تفاعلية", value=True)
+    # خيارات القص والزوائد
+    col_cut1, col_cut2 = st.columns(2)
+    with col_cut1:
+        enable_auto_trim = st.checkbox("✂️ قص الصمت والزوائد تلقائياً", value=True)
+    with col_cut2:
+        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين)", value=True)
 
     # شريط العنوان الجذاب
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
-    hook_text = ""
     hook_filter = ""
     if enable_hook:
         hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد للنهاية 😱🔥")
@@ -158,8 +146,8 @@ if uploaded_file is not None:
             clean_hook = hook_text.strip().replace(":", "\\:").replace("'", "")
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=60:fontsize=28:fontcolor=black:box=1:boxcolor=yellow@0.95:boxborderw=10"
 
-    # وضع وحماية الحساب
-    enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم تماماً", value=True)
+    # وضع وحماية الحساب (بدون أي مربعات عشوائية في الأعلى)
+    enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم في الأسفل", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
         col_sel1, col_sel2 = st.columns(2)
@@ -167,130 +155,133 @@ if uploaded_file is not None:
             chosen_label = st.selectbox("👤 اختر حسابك:", list(saved_accounts.keys()))
         with col_sel2:
             acc_pos = st.selectbox(
-                "📍 موضع الشارة:",
+                "📍 موضع الشارة وحجب القديم:",
                 [
-                    "تغطية ذكية واسعة (إخفاء تام للشعارات في الزوايا)",
+                    "تغطية الحساب القديم أسفل اليمين + وضع حسابك في الأعلى بوضوح",
+                    "أعلى المنتصف (بدون تغطية سفلية)",
+                    "أسفل اليمين فقط",
                     "أعلى اليسار",
-                    "أسفل اليمين",
-                    "أعلى اليمين",
                     "أسفل اليسار"
                 ]
             )
 
         final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
-        box_style = "box=1:boxcolor=black@0.90:boxborderw=10:fontcolor=white:fontsize=24"
+        box_style = "box=1:boxcolor=black@0.85:boxborderw=10:fontcolor=white:fontsize=24"
         
-        if acc_pos == "تغطية ذكية واسعة (إخفاء تام للشعارات في الزوايا)":
+        if acc_pos == "تغطية الحساب القديم أسفل اليمين + وضع حسابك في الأعلى بوضوح":
+            # صندوق أسود نظيف يغطي الشعار والحساب القديم في أسفل اليمين فقط، ووضع حسابك الجديد في الأعلى
             stamp_filter = (
-                f",drawbox=x=0:y=0:w=320:h=110:color=black@0.90:t=fill"
-                f",drawbox=x={target_w-380}:y={target_h-160}:w=380:h=160:color=black@0.90:t=fill"
+                f",drawbox=x={target_w-360}:y={target_h-170}:w=360:h=160:color=black@0.90:t=fill"
                 f",drawtext=text='{final_text}':x=(w-tw)/2:y=120:{box_style}"
             )
+        elif acc_pos == "أعلى المنتصف (بدون تغطية سفلية)":
+            stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=120:{box_style}"
+        elif acc_pos == "أسفل اليمين فقط":
+            stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=h-th-50:{box_style}"
         elif acc_pos == "أعلى اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=30:{box_style}"
-        elif acc_pos == "أسفل اليمين":
-            stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=h-th-50:{box_style}"
-        elif acc_pos == "أعلى اليمين":
-            stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=30:{box_style}"
         elif acc_pos == "أسفل اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=h-th-50:{box_style}"
 
-    # الفيسات التفاعلية
-    emoji_filter = ""
-    if enable_auto_emojis:
-        random_emoji = random.choice(["😂 🔥", "😱 🤯", "👀 💯", "👏 😂", "⚡ 💥"])
-        emoji_filter = f",drawtext=text='{random_emoji}':x=w-tw-30:y=40:fontsize=34:box=1:boxcolor=black@0.75:boxborderw=8"
+    all_text_filters = f"{hook_filter}{stamp_filter}"
 
-    if st.button("🚀 معالجة فورية وتعزيز المقطع للنشر"):
-        with st.spinner("جاري تعزيز الخوارزميات وتجهيز المقطع للنشر..."):
+    if st.button("🚀 معالجة فائقة السرعة وتجهيز المقطع"):
+        with st.spinner("جاري إزالة الشعار القديم وتجهيز المقطع..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
-            duration = get_video_duration(input_path)
 
-            # شريط التقدم المتحرك التلقائي
-            progress_bar_filter = f",drawbox=x=0:y=h-8:w=iw*t/{duration}:h=8:color=red@0.95:t=fill" if enable_progress_bar else ""
-            all_text_filters = f"{hook_filter}{stamp_filter}{emoji_filter}{progress_bar_filter}"
+            trim_start = 0.0
+            trim_end = 0.0
+            try:
+                detect_cmd = [
+                    "ffmpeg", "-i", input_path,
+                    "-af", "silencedetect=noise=-35dB:d=0.8",
+                    "-f", "null", "-"
+                ]
+                res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=10)
+                out_text = res_detect.stderr
+                
+                dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
+                total_dur = 0.0
+                if dur_match:
+                    h, m, s = dur_match.groups()
+                    total_dur = int(h) * 3600 + int(m) * 60 + float(s)
 
-            # تحسين الجودة والحدة
-            quality_enhancement = ",unsharp=3:3:0.6:3:3:0.0,eq=saturation=1.06:contrast=1.04:brightness=0.01" if enable_hd_boost else ""
+                if cut_outro and total_dur > 3.0:
+                    trim_end = total_dur - 2.2
+                    
+                if enable_auto_trim:
+                    s_starts = [float(x) for x in re.findall(r'silence_start:\s*([0-9.]+)', out_text)]
+                    s_ends = [float(x) for x in re.findall(r'silence_end:\s*([0-9.]+)', out_text)]
+                    if s_starts and s_starts[0] < 1.5 and s_ends:
+                        trim_start = s_ends[0]
+            except Exception:
+                pass
 
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{quality_enhancement}[fg];"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             elif style_code == "podcast_card":
                 filter_complex = (
                     f"color=c=#0B0F17:s={target_w}x{target_h}[bg];"
                     f"[0:v]scale={target_w}-40:{target_h}-180:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{quality_enhancement}[fg];"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             elif style_code == "crop":
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}{quality_enhancement}{all_text_filters}[outv]"
+                    f"crop={target_w}:{target_h}{all_text_filters}[outv]"
                 )
             else:
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2{quality_enhancement},"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{all_text_filters}[outv]"
                 )
 
-            cmd = [
-                "ffmpeg", "-y",
-                "-threads", "0",
+            cmd = ["ffmpeg", "-y"]
+            if trim_start > 0:
+                cmd.extend(["-ss", str(trim_start)])
+            if trim_end > trim_start:
+                cmd.extend(["-to", str(trim_end)])
+
+            cmd.extend([
                 "-i", input_path,
                 "-filter_complex", filter_complex,
                 "-map", "[outv]",
                 "-map", "0:a?",
-                "-map_metadata", "-1",
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-tune", "zerolatency",
                 "-pix_fmt", "yuv420p",
-                "-crf", "26",
-                "-af", "volume=1.25",
+                "-crf", "28",
                 "-c:a", "aac",
-                "-b:a", "128k",
+                "-b:a", "96k",
                 output_path
-            ]
+            ])
 
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"🎉 تم تجهيز الفيديو واكتمال التحسين الخوارزمي! ({file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تمت المعالجة بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الجاهز للنشر",
+                        label="⬇️ تحميل المقطع الجاهز",
                         data=f,
-                        file_name=f"viral_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
-
-                # ----------------- مولّد الكابشن والهاشتاقات الفيروسية الجاهز للنسخ -----------------
-                st.divider()
-                st.markdown("### 📋 الكابشن والهاشتاقات الفيروسية (جاهزة للنسخ والنشر)")
-                
-                base_title = hook_text.strip() if hook_text.strip() else "شاهد للنهاية وعطنا رأيك! 👀👇"
-                viral_caption = f"""{base_title}
-.
-شاركنا رأيك بالتعليقات 💬👇
-.
-#ترند #اكسبلور #السعودية #explore #fyp #viral #foryou #reels #تيك_توك #shorts"""
-                
-                st.code(viral_caption, language="text")
-                st.caption("💡 انسخ النص أعلاه والصقه مباشرة في خانة وصف الفيديو عند النشر.")
-
             except subprocess.CalledProcessError as e:
                 err_msg = e.stderr.decode('utf-8', errors='ignore')
                 st.error("حدث خطأ أثناء معالجة الفيديو:")
