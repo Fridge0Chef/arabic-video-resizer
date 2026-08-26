@@ -2,6 +2,7 @@ import streamlit as st
 import subprocess
 import os
 import tempfile
+import re
 
 # إعدادات الصفحة
 st.set_page_config(
@@ -10,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# تخصيص واجهة عربية سريعة وخفيفة
+# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -93,8 +94,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو المعالجة الفائقة للفيديو</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">تعديل سريع، قوالب سينمائية، وتغطية فورية للشعارات في ثوانٍ</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">أنماط سينمائية، قص ذكي، وتغطية الشعارات بسرعة فائقة</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -129,7 +130,14 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # خيارات التعديل
+    # خيارات القص والزوائد (تم إرجاعها بالكامل)
+    col_cut1, col_cut2 = st.columns(2)
+    with col_cut1:
+        enable_auto_trim = st.checkbox("✂️ قص الصمت والزوائد تلقائياً", value=True)
+    with col_cut2:
+        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين)", value=True)
+
+    # شريط العنوان الجذاب
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
     hook_filter = ""
     if enable_hook:
@@ -138,6 +146,7 @@ if uploaded_file is not None:
             clean_hook = hook_text.strip().replace(":", "\\:").replace("'", "")
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=60:fontsize=28:fontcolor=black:box=1:boxcolor=yellow@0.95:boxborderw=10"
 
+    # وضع وحماية الحساب
     enable_stamp = st.checkbox("✨ وضع حسابي وتغطية الشعار القديم", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
@@ -176,15 +185,44 @@ if uploaded_file is not None:
 
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
-    if st.button("🚀 معالجة فائقة السرعة وتحميل المقطع"):
-        with st.spinner("جاري التجهيز السريع في ثوانٍ..."):
+    if st.button("🚀 معالجة فائقة السرعة وتجهيز المقطع"):
+        with st.spinner("جاري التحليل السريع وقص الزوائد وتجهيز الفيديو..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # فلاتر عالية الكفاءة ومعالجة خفيفة
+            # تحليل سريع للقص التلقائي والخاتمة
+            trim_start = 0.0
+            trim_end = 0.0
+            try:
+                detect_cmd = [
+                    "ffmpeg", "-i", input_path,
+                    "-af", "silencedetect=noise=-35dB:d=0.8",
+                    "-f", "null", "-"
+                ]
+                res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=10)
+                out_text = res_detect.stderr
+                
+                dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
+                total_dur = 0.0
+                if dur_match:
+                    h, m, s = dur_match.groups()
+                    total_dur = int(h) * 3600 + int(m) * 60 + float(s)
+
+                if cut_outro and total_dur > 3.0:
+                    trim_end = total_dur - 2.2
+                    
+                if enable_auto_trim:
+                    s_starts = [float(x) for x in re.findall(r'silence_start:\s*([0-9.]+)', out_text)]
+                    s_ends = [float(x) for x in re.findall(r'silence_end:\s*([0-9.]+)', out_text)]
+                    if s_starts and s_starts[0] < 1.5 and s_ends:
+                        trim_start = s_ends[0]
+            except Exception:
+                pass
+
+            # فلاتر الإخراج
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
@@ -211,10 +249,13 @@ if uploaded_file is not None:
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{all_text_filters}[outv]"
                 )
 
-            # معالجة فورية بأعلى درجات السرعة
-            cmd = [
-                "ffmpeg", "-y",
-                "-threads", "0",
+            cmd = ["ffmpeg", "-y"]
+            if trim_start > 0:
+                cmd.extend(["-ss", str(trim_start)])
+            if trim_end > trim_start:
+                cmd.extend(["-to", str(trim_end)])
+
+            cmd.extend([
                 "-i", input_path,
                 "-filter_complex", filter_complex,
                 "-map", "[outv]",
@@ -227,13 +268,13 @@ if uploaded_file is not None:
                 "-c:a", "aac",
                 "-b:a", "96k",
                 output_path
-            ]
+            ])
 
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تمت المعالجة بسرعة فائقة! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تمت المعالجة بنجاح وسرعة فائقة! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
