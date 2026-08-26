@@ -11,44 +11,30 @@ st.set_page_config(
     layout="centered"
 )
 
-# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
+# تخصيص واجهة عربية كاملة + إخفاء شعار Streamlit والشريط السفلي + تصحيح الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
     
-    html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox, .stCheckbox, .stSlider, .stRadio, .stTextInput, label, p, span {
+    html, body, p, h1, h2, h3, h4, h5, h6, span, label, input, select, textarea {
         font-family: 'Cairo', sans-serif !important;
         direction: rtl;
         text-align: right;
     }
     
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    [data-testid="stHeader"] {display: none;}
-    [data-testid="stToolbar"] {display: none;}
-    
-    [data-testid="stFileUploader"] section button {
-        font-size: 0 !important;
-    }
-    [data-testid="stFileUploader"] section button::after {
-        content: "📁 اختر الفيديو من جهازك";
-        font-size: 0.95rem !important;
-        font-family: 'Cairo', sans-serif !important;
-        font-weight: 700;
-    }
-    [data-testid="stFileUploader"] small {
-        font-size: 0 !important;
-    }
-    [data-testid="stFileUploader"] small::after {
-        content: "الحد الأقصى 200 ميجابايت • صيغ الفيديو: MP4, MOV, MKV";
-        font-size: 0.8rem !important;
-        font-family: 'Cairo', sans-serif !important;
-        color: #94A3B8;
-        display: block;
-        margin-top: 5px;
+    /* إخفاء القوائم وشعار الاستضافة بالكامل */
+    #MainMenu, footer, header, [data-testid="stHeader"], [data-testid="stToolbar"], 
+    [data-testid="stStatusWidget"], div[class^="viewerBadge"], [data-testid="stDeployButton"] {
+        display: none !important;
+        visibility: hidden !important;
     }
     
+    /* حماية أيقونات النظام من التداخل مع الخط العربي */
+    [data-testid="stIconMaterial"], .material-symbols-rounded, .material-symbols-outlined, [data-testid="stExpanderToggleIcon"] {
+        font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+        direction: ltr !important;
+    }
+
     .main-title { 
         text-align: center; 
         font-weight: 800; 
@@ -113,7 +99,6 @@ if st.session_state.get("yt", "abu10shaher").strip():
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">أنماط سينمائية جذابة، قص ذكي تلقائي، واستبدال الحسابات بضغطة زر</p>', unsafe_allow_html=True)
 
-# ----------------- خيارات المنصات -----------------
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "9_16_Vertical"},
     "ريلز إنستقرام (طولي 9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "Reels_9_16"},
@@ -122,7 +107,6 @@ PLATFORMS = {
     "يوتيوب كلاسيكي (أفقي 16:9)": {"w": 1920, "h": 1080, "w_low": 1280, "h_low": 720, "name": "Landscape_16_9"},
 }
 
-# أنماط العرض والتنسيق الاحترافية الفيرال
 STYLES = {
     "🌟 تمويه ضبابي سينمائي (تعتيم ذكي وتركيز عالي)": "blur_glow",
     "🎙️ إطار استوديو البودكاست الحديث (خلفية فحمية ملكية)": "podcast_card",
@@ -130,7 +114,7 @@ STYLES = {
     "⬛ إطار أسود كلاسيكي نقي": "fit"
 }
 
-uploaded_file = st.file_uploader("اختر مقطع الفيديو أو اسحبه هنا:", type=["mp4", "mov", "mkv"])
+uploaded_file = st.file_uploader("اختر مقطع الفيديو من جهازك:", type=["mp4", "mov", "mkv"])
 
 if uploaded_file is not None:
     st.video(uploaded_file)
@@ -171,14 +155,18 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # 1. خيار القص الذكي التلقائي للصمت والبداية/النهاية
-    enable_auto_trim = st.checkbox("✂️ قص ذكي تلقائي (اكتشاف وحذف الصمت والبداية/النهاية الفارغة تلقائياً)", value=True)
+    # خيارات القص والزوائد
+    col_cut1, col_cut2 = st.columns(2)
+    with col_cut1:
+        enable_auto_trim = st.checkbox("✂️ قص الصمت والزوائد تلقائياً", value=True)
+    with col_cut2:
+        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين)", value=True)
 
-    # 2. شريط العنوان الجذاب (Headline Bar)
+    # شريط العنوان الجذاب
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
     hook_filter = ""
     if enable_hook:
-        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: سر خطير لا يفوتك 😱🔥")
+        hook_text = st.text_input("نص العنوان الرئيسي:", placeholder="مثال: شاهد للنهاية 😱🔥")
         col_h1, col_h2 = st.columns(2)
         with col_h1:
             hook_bg = st.selectbox("لون خلفية الشريط:", ["أصفر 🟨", "أسود ⬛", "أحمر 🟥", "أبيض ⬜"])
@@ -198,7 +186,7 @@ if uploaded_file is not None:
             hook_font_size = font_size + 8
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=80:fontsize={hook_font_size}:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=14"
 
-    # 3. وضع الحساب المحفوظ
+    # وضع الحساب المحفوظ
     enable_stamp = st.checkbox("✨ وضع أحد حساباتي لتغطية الشعار والحساب القديم", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
@@ -234,44 +222,44 @@ if uploaded_file is not None:
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
     if st.button("🚀 معالجة وتجهيز المقطع الآن"):
-        with st.spinner("جاري التحليل وتطبيق الإخراج السينمائي الذكي..."):
+        with st.spinner("جاري التحليل وإزالة الزوائد وتجهيز الفيديو..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # تحليل تلقائي للقص الذكي
+            # تحليل مدة الفيديو وإزالة الزوائد
             trim_start = 0.0
             trim_end = 0.0
-            if enable_auto_trim:
-                try:
-                    detect_cmd = [
-                        "ffmpeg", "-i", input_path,
-                        "-af", "silencedetect=noise=-35dB:d=0.8",
-                        "-f", "null", "-"
-                    ]
-                    res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=15)
-                    out_text = res_detect.stderr
+            try:
+                detect_cmd = [
+                    "ffmpeg", "-i", input_path,
+                    "-af", "silencedetect=noise=-35dB:d=0.8",
+                    "-f", "null", "-"
+                ]
+                res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=15)
+                out_text = res_detect.stderr
+                
+                dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
+                total_dur = 0.0
+                if dur_match:
+                    h, m, s = dur_match.groups()
+                    total_dur = int(h) * 3600 + int(m) * 60 + float(s)
+
+                if cut_outro and total_dur > 3.0:
+                    trim_end = total_dur - 2.2
                     
-                    dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
-                    total_dur = 0.0
-                    if dur_match:
-                        h, m, s = dur_match.groups()
-                        total_dur = int(h) * 3600 + int(m) * 60 + float(s)
-                        
+                if enable_auto_trim:
                     s_starts = [float(x) for x in re.findall(r'silence_start:\s*([0-9.]+)', out_text)]
                     s_ends = [float(x) for x in re.findall(r'silence_end:\s*([0-9.]+)', out_text)]
                     
                     if s_starts and s_starts[0] < 1.5 and s_ends:
                         trim_start = s_ends[0]
-                    if s_starts and s_ends and total_dur > 0:
-                        if s_ends[-1] >= total_dur - 1.5:
-                            trim_end = s_starts[-1]
-                except Exception:
-                    pass
+            except Exception:
+                pass
 
-            # بناء الفلاتر الإخراجية السينمائية
+            # بناء الفلاتر السينمائية
             if style_code == "blur_glow":
                 filter_complex = (
                     f"[0:v]scale=120:213:force_original_aspect_ratio=increase,boxblur=5:5,"
@@ -292,7 +280,7 @@ if uploaded_file is not None:
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
                     f"crop={target_w}:{target_h}{all_text_filters}[outv]"
                 )
-            else: # fit
+            else:
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
@@ -300,9 +288,9 @@ if uploaded_file is not None:
                 )
 
             cmd = ["ffmpeg", "-y"]
-            if enable_auto_trim and trim_start > 0:
+            if trim_start > 0:
                 cmd.extend(["-ss", str(trim_start)])
-            if enable_auto_trim and trim_end > trim_start:
+            if trim_end > trim_start:
                 cmd.extend(["-to", str(trim_end)])
 
             cmd.extend([
@@ -323,7 +311,7 @@ if uploaded_file is not None:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"✅ تمت المعالجة والإخراج بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"✅ تمت المعالجة بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
