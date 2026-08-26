@@ -5,12 +5,12 @@ import tempfile
 
 # إعدادات الصفحة
 st.set_page_config(
-    page_title="استوديو تعديل وتجهيز الفيديوهات السريع",
+    page_title="استوديو تعديل الفيديو الذكي فائق السرعة",
     page_icon="🎬",
     layout="centered"
 )
 
-# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية والشريط الأحمر، وتصحيح الأيقونات
+# تخصيص واجهة عربية كاملة، إخفاء القوائم الإنجليزية، وتصحيح الأيقونات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -94,7 +94,7 @@ if st.session_state.get("yt", "abu10shaher").strip():
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديوهات فائق السرعة</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عناوين جذابة، حذف الزوائد والخواتيم، وتغطية الشعارات بلمح البصر</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">عناوين جذابة، تمويه سينمائي، إزالة الخاتمة، وتغطية الشعارات بسرعة خيالية</p>', unsafe_allow_html=True)
 
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
@@ -129,17 +129,25 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # خيارات إضافية لحذف الزوائد والخواتيم
-    st.markdown("### ✂️ خيارات التصفية وحذف الزوائد")
+    # خيارات القص والتحكم بالوقت
+    st.markdown("### ✂️ خيارات القص والتحكم بالوقت")
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك (آخر ثانيتين تلقائياً)", value=True)
     with col_c2:
-        cut_intro = st.checkbox("✂️ حذف الثواني الزائدة في بداية المقطع (أول ثانية)", value=False)
+        enable_manual_trim = st.checkbox("✂️ قص يدوي بالثواني", value=False)
+
+    manual_start, manual_end = 0, 0
+    if enable_manual_trim:
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            manual_start = st.number_input("بداية القص (ثواني):", min_value=0, value=0, step=1)
+        with col_m2:
+            manual_end = st.number_input("نهاية القص (ثواني - 0 للنهاية):", min_value=0, value=0, step=1)
 
     st.divider()
 
-    # شريط العنوان الجذاب (Hook Bar)
+    # 1. شريط العنوان الجذاب (Hook Bar) - متواجد وإجباري حسب الطلب
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو", value=True)
     hook_filter = ""
     if enable_hook:
@@ -159,9 +167,10 @@ if uploaded_file is not None:
                 "أبيض ⬜": "white@0.95"
             }
             hook_bg_val = bg_map[hook_bg]
+            # دمج شريط العنوان بدقة واحترافية ليظهر في أعلى الشاشة دون إبطاء
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=50:fontsize=26:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=10"
 
-    # وضع وحماية الحساب وتغطية القديم
+    # 2. وضع وحماية الحساب وتغطية القديم
     enable_stamp = st.checkbox("✨ وضع حسابك وتغطية الشعار القديم أسفل اليمين", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
@@ -197,14 +206,14 @@ if uploaded_file is not None:
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
     if st.button("🚀 معالجة فورية وتجهيز المقطع"):
-        with st.spinner("جاري معالجة الفيديو وتطبيق التعديلات بسرعة خيالية..."):
+        with st.spinner("جاري دمج التعديلات والمعالجة فائقة السرعة..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # استخراج مدة الفيديو فوراً بدون أي تأخير باستخدام ffprobe
+            # استخراج المدة الفورية بدون بطء (باستخدام ffprobe في أقل من جزء من الثانية)
             total_duration = 0.0
             try:
                 probe_cmd = [
@@ -218,14 +227,15 @@ if uploaded_file is not None:
             except Exception:
                 pass
 
-            # حساب حدود القص الفوري
-            trim_start = 1.0 if cut_intro else 0.0
-            trim_end = 0.0
+            # حساب أوقات البداية والنهاية للقص الفوري
+            trim_start = float(manual_start)
+            trim_end = float(manual_end) if manual_end > 0 else 0.0
 
             if cut_outro and total_duration > 3.0:
-                trim_end = total_duration - 2.2
+                if trim_end == 0 or trim_end > total_duration - 2.2:
+                    trim_end = total_duration - 2.2
 
-            # بناء الفلاتر
+            # بناء فلاتر التنسيق والدمج السريع
             if style_code == "blur_fast":
                 filter_complex = (
                     f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
@@ -252,6 +262,7 @@ if uploaded_file is not None:
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{all_text_filters}[outv]"
                 )
 
+            # أمر FFmpeg موحد وسريع جداً (تمريرة واحدة تدمج كل شيء)
             cmd = ["ffmpeg", "-y"]
             if trim_start > 0:
                 cmd.extend(["-ss", str(trim_start)])
