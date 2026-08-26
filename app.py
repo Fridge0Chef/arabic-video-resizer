@@ -10,7 +10,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# تخصيص واجهة متوافقة بالكامل مع الجوال ودعم RTL
+# تنسيق الواجهة ودعم الجوال وRTL
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -21,14 +21,23 @@ st.markdown("""
         text-align: center; 
         font-weight: 800; 
         color: #1E293B; 
-        font-size: 1.6rem;
-        margin-bottom: 0.3rem; 
+        font-size: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 0.2rem; 
     }
     .sub-title { 
         text-align: center; 
         color: #64748B; 
-        font-size: 0.95rem;
-        margin-bottom: 1.5rem; 
+        font-size: 0.9rem;
+        margin-bottom: 1.2rem; 
+    }
+    div[data-testid="stPopover"] > button {
+        border-radius: 50% !important;
+        width: 42px !important;
+        height: 42px !important;
+        padding: 0 !important;
+        font-size: 1.2rem !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     div.stButton > button {
         width: 100%; 
@@ -47,34 +56,34 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ----------------- الشريط العلوي مع أيقونة الإعدادات -----------------
+head_col1, head_col2 = st.columns([1, 7])
+with head_col1:
+    with st.popover("⚙️"):
+        st.markdown("#### ⚙️ حفظ حساباتك")
+        snap_handle = st.text_input("👻 سناب شات:", key="snap", placeholder="@user_snap")
+        tiktok_handle = st.text_input("🎵 تيك توك:", key="tiktok", placeholder="@user_tiktok")
+        ig_handle = st.text_input("📸 إنستقرام:", key="ig", placeholder="@user_ig")
+        x_handle = st.text_input("𝕏 منصة إكس:", key="x", placeholder="@user_x")
+        yt_handle = st.text_input("▶️ يوتيوب:", key="yt", placeholder="@channel_yt")
+
+# تجميع الحسابات
+saved_accounts = {}
+if st.session_state.get("snap", "").strip():
+    saved_accounts[f"👻 سناب شات ({st.session_state.snap.strip()})"] = f"Snap: {st.session_state.snap.strip()}"
+if st.session_state.get("tiktok", "").strip():
+    saved_accounts[f"🎵 تيك توك ({st.session_state.tiktok.strip()})"] = f"TikTok: {st.session_state.tiktok.strip()}"
+if st.session_state.get("ig", "").strip():
+    saved_accounts[f"📸 إنستقرام ({st.session_state.ig.strip()})"] = f"IG: {st.session_state.ig.strip()}"
+if st.session_state.get("x", "").strip():
+    saved_accounts[f"𝕏 منصة إكس ({st.session_state.x.strip()})"] = f"X: {st.session_state.x.strip()}"
+if st.session_state.get("yt", "").strip():
+    saved_accounts[f"▶️ يوتيوب ({st.session_state.yt.strip()})"] = f"YouTube: {st.session_state.yt.strip()}"
+
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو ووضع الحسابات</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الشعار القديم، وضع حسابك المفضل بضغطة زر</p>', unsafe_allow_html=True)
 
-# ----------------- إعدادات الحسابات مدمجة ومخفية داخل قائمة مطوية -----------------
-with st.expander("⚙️ إعدادات وتعديل الحسابات المحفوظة (اضغط للتعديل)"):
-    col_acc1, col_acc2 = st.columns(2)
-    with col_acc1:
-        snap_handle = st.text_input("👻 سناب شات:", placeholder="@user_snap")
-        tiktok_handle = st.text_input("🎵 تيك توك:", placeholder="@user_tiktok")
-        ig_handle = st.text_input("📸 إنستقرام:", placeholder="@user_ig")
-    with col_acc2:
-        x_handle = st.text_input("𝕏 منصة إكس:", placeholder="@user_x")
-        yt_handle = st.text_input("▶️ يوتيوب:", placeholder="@channel_yt")
-
-# تجميع الحسابات المحفوظة
-saved_accounts = {}
-if snap_handle.strip():
-    saved_accounts[f"👻 سناب شات ({snap_handle.strip()})"] = f"Snap: {snap_handle.strip()}"
-if tiktok_handle.strip():
-    saved_accounts[f"🎵 تيك توك ({tiktok_handle.strip()})"] = f"TikTok: {tiktok_handle.strip()}"
-if ig_handle.strip():
-    saved_accounts[f"📸 إنستقرام ({ig_handle.strip()})"] = f"IG: {ig_handle.strip()}"
-if x_handle.strip():
-    saved_accounts[f"𝕏 منصة إكس ({x_handle.strip()})"] = f"X: {x_handle.strip()}"
-if yt_handle.strip():
-    saved_accounts[f"▶️ يوتيوب ({yt_handle.strip()})"] = f"YouTube: {yt_handle.strip()}"
-
-# ----------------- خيارات المعالجة -----------------
+# ----------------- خيارات المنصات والمعالجة -----------------
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "9_16_Vertical"},
     "ريلز إنستقرام (9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "Reels_9_16"},
@@ -102,7 +111,7 @@ if uploaded_file is not None:
         selected_style = st.selectbox("🎨 نمط ملء الشاشة:", list(STYLES.keys()))
 
     size_mode = st.radio(
-        "📦 خيار حجم ومساحة الملف النهائي:",
+        "📦 حجم ومساحة الملف النهائي:",
         [
             "⚡ حجم خفيف جداً ومضغوط (توفير عالي للبيانات وسرعة فائقة)",
             "⚖️ حجم متوازن (دقة 1080p قياسية)",
@@ -130,20 +139,19 @@ if uploaded_file is not None:
 
     st.divider()
     
-    # خيار وضع الحساب المحفوظ
     enable_stamp = st.checkbox("✨ وضع أحد حساباتي المحفوظة فوق الفيديو", value=True)
     
     extra_filters = ""
     if enable_stamp:
         if not saved_accounts:
-            st.info("💡 اكتب معرّف حسابك في قائمة (إعدادات وتعديل الحسابات المحفوظة) بالأعلى لتجده هنا.")
+            st.info("💡 اضغط على أيقونة الترس ⚙️ في أعلى الصفحة واكتب حسابك ليظهر لك في القائمة.")
         else:
             col_sel1, col_sel2 = st.columns(2)
             with col_sel1:
-                chosen_label = st.selectbox("👤 اختر الحساب المراد وضعه:", list(saved_accounts.keys()))
+                chosen_label = st.selectbox("👤 اختر الحساب:", list(saved_accounts.keys()))
             with col_sel2:
                 acc_pos = st.selectbox(
-                    "📍 موضع وضع الحساب في المقطع:",
+                    "📍 موضع الشارة في المقطع:",
                     [
                         "تغطية علامة تيك توك (أعلى اليسار)",
                         "تغطية علامة تيك توك السفلية (أسفل اليمين)",
