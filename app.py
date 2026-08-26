@@ -2,6 +2,7 @@ import streamlit as st
 import subprocess
 import os
 import tempfile
+import re
 
 # إعدادات الصفحة
 st.set_page_config(
@@ -21,14 +22,12 @@ st.markdown("""
         text-align: right;
     }
     
-    /* إخفاء القوائم العلوية والسفلية الإنجليزية الافتراضية */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
     [data-testid="stToolbar"] {display: none;}
     
-    /* تعريب زر رفع الملفات */
     [data-testid="stFileUploader"] section button {
         font-size: 0 !important;
     }
@@ -81,7 +80,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- أيقونة الإعدادات العلوية وتثبيت الحسابات -----------------
+# ----------------- إعدادات الحسابات المحفوظة مسبقاً -----------------
 with st.popover("⚙️ تعديل الحسابات المحفوظة"):
     st.markdown("#### ⚙️ الحسابات الافتراضية")
     snap_handle = st.text_input("👻 حساب سناب شات:", value="Fig.fig.", key="snap")
@@ -90,7 +89,6 @@ with st.popover("⚙️ تعديل الحسابات المحفوظة"):
     x_handle = st.text_input("𝕏 حساب منصة إكس:", value="ahmadtawfir", key="x")
     yt_handle = st.text_input("▶️ حساب يوتيوب:", value="abu10shaher", key="yt")
 
-# تجميع وتجهيز الحسابات
 saved_accounts = {}
 if st.session_state.get("snap", "Fig.fig.").strip():
     clean_snap = st.session_state.get("snap", "Fig.fig.").strip().lstrip('@')
@@ -113,7 +111,7 @@ if st.session_state.get("yt", "abu10shaher").strip():
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
 st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عدّل الأبعاد، قص المقاطع، ضع عنواناً جذاباً، واستبدل الشعار بحساباتك</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">قص تلقائي، أبعاد مخصصة، عناوين جذابة، واستبدال الحسابات بضغطة زر</p>', unsafe_allow_html=True)
 
 # ----------------- خيارات المنصات -----------------
 PLATFORMS = {
@@ -171,15 +169,8 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # 1. قص أطراف الفيديو (Trimming)
-    enable_trim = st.checkbox("✂️ قص جزء من الفيديو (حذف البداية أو النهاية)")
-    start_time, end_time = 0, 0
-    if enable_trim:
-        col_t1, col_t2 = st.columns(2)
-        with col_t1:
-            start_time = st.number_input("وقت البداية (بالثواني):", min_value=0, value=0, step=1)
-        with col_t2:
-            end_time = st.number_input("وقت النهاية (بالثواني - ضع 0 للوصول إلى نهاية المقطع):", min_value=0, value=0, step=1)
+    # 1. خيار القص الذكي التلقائي للصمت والبداية/النهاية
+    enable_auto_trim = st.checkbox("✂️ قص ذكي تلقائي (اكتشاف وحذف الصمت والبداية/النهاية الفارغة تلقائياً)", value=True)
 
     # 2. شريط العنوان الجذاب (Headline Bar)
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو")
@@ -241,12 +232,42 @@ if uploaded_file is not None:
     all_text_filters = f"{hook_filter}{stamp_filter}"
 
     if st.button("🚀 معالجة وتجهيز المقطع الآن"):
-        with st.spinner("جاري المعالجة والتعديل فائق السرعة..."):
+        with st.spinner("جاري التحليل الذكي وقص الأجزاء الزائدة وتطبيق التعديلات..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
+
+            # تحليل تلقائي للقص الذكي (إذا كان مفعلاً)
+            trim_start = 0.0
+            trim_end = 0.0
+            if enable_auto_trim:
+                try:
+                    detect_cmd = [
+                        "ffmpeg", "-i", input_path,
+                        "-af", "silencedetect=noise=-35dB:d=0.8",
+                        "-f", "null", "-"
+                    ]
+                    res_detect = subprocess.run(detect_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, timeout=15)
+                    out_text = res_detect.stderr
+                    
+                    dur_match = re.search(r'Duration:\s*(\d{2}):(\d{2}):([\d.]+)', out_text)
+                    total_dur = 0.0
+                    if dur_match:
+                        h, m, s = dur_match.groups()
+                        total_dur = int(h) * 3600 + int(m) * 60 + float(s)
+                        
+                    s_starts = [float(x) for x in re.findall(r'silence_start:\s*([0-9.]+)', out_text)]
+                    s_ends = [float(x) for x in re.findall(r'silence_end:\s*([0-9.]+)', out_text)]
+                    
+                    if s_starts and s_starts[0] < 1.5 and s_ends:
+                        trim_start = s_ends[0]
+                    if s_starts and s_ends and total_dur > 0:
+                        if s_ends[-1] >= total_dur - 1.5:
+                            trim_end = s_starts[-1]
+                except Exception:
+                    pass
 
             if style_code == "blur":
                 filter_complex = (
@@ -269,10 +290,10 @@ if uploaded_file is not None:
                 )
 
             cmd = ["ffmpeg", "-y"]
-            if enable_trim and start_time > 0:
-                cmd.extend(["-ss", str(start_time)])
-            if enable_trim and end_time > start_time:
-                cmd.extend(["-to", str(end_time)])
+            if enable_auto_trim and trim_start > 0:
+                cmd.extend(["-ss", str(trim_start)])
+            if enable_auto_trim and trim_end > trim_start:
+                cmd.extend(["-to", str(trim_end)])
 
             cmd.extend([
                 "-i", input_path,
@@ -292,7 +313,7 @@ if uploaded_file is not None:
                 res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"✅ تمت المعالجة بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"✅ تمت المعالجة والقص الذكي بنجاح! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
