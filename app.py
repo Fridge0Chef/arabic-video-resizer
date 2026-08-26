@@ -113,7 +113,7 @@ if uploaded_file is not None:
             delogo_filter = f",delogo=x=20:y={target_h - 150}:w=280:h=120"
         elif wm_position == "أسفل اليمين":
             delogo_filter = f",delogo=x={target_w - 300}:y={target_h - 150}:w=280:h=120"
-        else: # موضع مخصص
+        else:
             col_x, col_y = st.columns(2)
             with col_x:
                 custom_x = st.slider("الإحداثي الأفقي (X):", 0, target_w - 100, 50)
@@ -131,12 +131,13 @@ if uploaded_file is not None:
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # بناء الفلتر
+            # بناء الفلاتر مع تصحيح الأبعاد الزوجية التلقائي
             if style_code == "blur":
                 vf_filter = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h},gblur=sigma=25[bg];"
-                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease[fg];"
+                    f"crop={target_w}:{target_h},boxblur=20:20[bg];"
+                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{delogo_filter}"
                 )
             elif style_code == "crop":
@@ -147,6 +148,7 @@ if uploaded_file is not None:
             else: # fit
                 vf_filter = (
                     f"scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
+                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{delogo_filter}"
                 )
 
@@ -154,16 +156,19 @@ if uploaded_file is not None:
                 "ffmpeg", "-y",
                 "-i", input_path,
                 "-vf", vf_filter,
+                "-map", "0:v:0",
+                "-map", "0:a:0?",
                 "-c:v", "libx264",
-                "-preset", "fast",
-                "-crf", "20",
+                "-pix_fmt", "yuv420p",
+                "-preset", "veryfast",
+                "-crf", "22",
                 "-c:a", "aac",
-                "-b:a", "192k",
+                "-b:a", "128k",
                 output_path
             ]
 
             try:
-                subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                res = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 st.success("✅ تمت المعالجة وإزالة الشعار بنجاح!")
                 st.video(output_path)
@@ -175,8 +180,10 @@ if uploaded_file is not None:
                         file_name=f"clean_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
-            except Exception as e:
-                st.error("حدث خطأ أثناء المعالجة، تأكد من سلامة ملف الفيديو.")
+            except subprocess.CalledProcessError as e:
+                err_msg = e.stderr.decode('utf-8', errors='ignore')
+                st.error("حدث خطأ أثناء معالجة الفيديو بواسطة FFmpeg:")
+                st.code(err_msg[-400:] if len(err_msg) > 400 else err_msg)
             finally:
                 if os.path.exists(input_path):
                     os.remove(input_path)
