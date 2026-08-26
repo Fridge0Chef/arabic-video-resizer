@@ -7,42 +7,59 @@ import tempfile
 st.set_page_config(
     page_title="مُحرر وقاص الفيديوهات الذكي",
     page_icon="🎬",
-    layout="centered",
-    initial_sidebar_state="expanded"
+    layout="centered"
 )
 
-# تخصيص واجهة عصرية ودعم اللغة العربية
+# تخصيص واجهة متوافقة بالكامل مع الجوال ودعم RTL
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-    html, body, [class*="css"], .stMarkdown, .stButton, .stSelectbox, .stCheckbox, .stSlider, .stRadio, .stTextInput {
+    * {
         font-family: 'Cairo', sans-serif !important;
-        direction: rtl;
-        text-align: right;
     }
-    .main-title { text-align: center; font-weight: 800; color: #1E293B; margin-bottom: 0.5rem; }
-    .sub-title { text-align: center; color: #64748B; margin-bottom: 2rem; }
+    .main-title { 
+        text-align: center; 
+        font-weight: 800; 
+        color: #1E293B; 
+        font-size: 1.6rem;
+        margin-bottom: 0.3rem; 
+    }
+    .sub-title { 
+        text-align: center; 
+        color: #64748B; 
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem; 
+    }
     div.stButton > button {
-        width: 100%; background-color: #2563EB; color: white; font-weight: 700;
-        border-radius: 10px; padding: 0.6rem 1rem; border: none; transition: 0.3s;
+        width: 100%; 
+        background-color: #2563EB; 
+        color: white; 
+        font-weight: 700;
+        border-radius: 10px; 
+        padding: 0.6rem 1rem; 
+        border: none; 
+        transition: 0.3s;
     }
-    div.stButton > button:hover { background-color: #1D4ED8; color: white; }
-    [data-testid="stSidebar"] {
-        direction: rtl;
-        text-align: right;
+    div.stButton > button:hover { 
+        background-color: #1D4ED8; 
+        color: white; 
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- الشريط الجانبي لحفظ الحسابات لمرة واحدة -----------------
-st.sidebar.markdown("### ⚙️ حفظ حساباتك (لمرة واحدة)")
-st.sidebar.write("أدخل معرّفاتك هنا مرة واحدة وستجدها جاهزة للاختيار دائماً:")
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو ووضع الحسابات</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الشعار القديم، وضع حسابك المفضل بضغطة زر</p>', unsafe_allow_html=True)
 
-snap_handle = st.sidebar.text_input("👻 سناب شات:", placeholder="@user_snap")
-tiktok_handle = st.sidebar.text_input("🎵 تيك توك:", placeholder="@user_tiktok")
-ig_handle = st.sidebar.text_input("📸 إنستقرام:", placeholder="@user_ig")
-x_handle = st.sidebar.text_input("𝕏 منصة إكس:", placeholder="@user_x")
-yt_handle = st.sidebar.text_input("▶️ يوتيوب:", placeholder="@channel_yt")
+# ----------------- إعدادات الحسابات مدمجة ومخفية داخل قائمة مطوية -----------------
+with st.expander("⚙️ إعدادات وتعديل الحسابات المحفوظة (اضغط للتعديل)"):
+    col_acc1, col_acc2 = st.columns(2)
+    with col_acc1:
+        snap_handle = st.text_input("👻 سناب شات:", placeholder="@user_snap")
+        tiktok_handle = st.text_input("🎵 تيك توك:", placeholder="@user_tiktok")
+        ig_handle = st.text_input("📸 إنستقرام:", placeholder="@user_ig")
+    with col_acc2:
+        x_handle = st.text_input("𝕏 منصة إكس:", placeholder="@user_x")
+        yt_handle = st.text_input("▶️ يوتيوب:", placeholder="@channel_yt")
 
 # تجميع الحسابات المحفوظة
 saved_accounts = {}
@@ -57,10 +74,7 @@ if x_handle.strip():
 if yt_handle.strip():
     saved_accounts[f"▶️ يوتيوب ({yt_handle.strip()})"] = f"YouTube: {yt_handle.strip()}"
 
-# ----------------- الواجهة الرئيسية -----------------
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديو ووضع الحسابات</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عدّل الأبعاد، احجب الشعار القديم، وضع حسابك المفضل بضغطة زر</p>', unsafe_allow_html=True)
-
+# ----------------- خيارات المعالجة -----------------
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "9_16_Vertical"},
     "ريلز إنستقرام (9:16)": {"w": 1080, "h": 1920, "w_low": 720, "h_low": 1280, "name": "Reels_9_16"},
@@ -122,7 +136,7 @@ if uploaded_file is not None:
     extra_filters = ""
     if enable_stamp:
         if not saved_accounts:
-            st.info("💡 اكتب معرّف حسابك أولاً في القائمة الجانبية (يمين الشاشة) ليظهر لك هنا.")
+            st.info("💡 اكتب معرّف حسابك في قائمة (إعدادات وتعديل الحسابات المحفوظة) بالأعلى لتجده هنا.")
         else:
             col_sel1, col_sel2 = st.columns(2)
             with col_sel1:
