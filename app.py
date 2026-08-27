@@ -60,13 +60,6 @@ st.markdown("""
         background-color: #1D4ED8; 
         color: white; 
     }
-    .copy-card {
-        background-color: #1E293B;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 10px;
-        border: 1px solid #334155;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -100,8 +93,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديوهات ومولّد المحتوى الذكي</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">معالجة فورية فائقة السرعة، ضغط ذكي 70%، وعناوين ونصوص جاهزة للانتشار</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات الشامل</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">تنظيف النصوص القديمة، ملء الشاشة، ضغط ذكي 70%، وعناوين فيروسية</p>', unsafe_allow_html=True)
 
 # خيارات المنصات
 PLATFORMS = {
@@ -138,7 +131,20 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # 1. خيارات المعالجة والقص الأوتوماتيكي والضغط الذكي
+    # 1. خيارات تنظيف الكلام والشعارات القديمة
+    st.markdown("### 🧹 تنظيف وحذف الكتابات والعلامات القديمة")
+    clean_mode = st.radio(
+        "اختر طريقة التخلص من الكلام والعلامات في المقطع:",
+        [
+            "🔍 تكبير سينمائي ذكي (يقص ويطرد النصوص والعلامات الموجودة في أطراف الفيديو)",
+            "⬛ تغطية علوية وسفلية شاملة (إخفاء كافة النصوص القديمة تحت أشرطة أنيقة)",
+            "🔘 عادي (الاحتفاظ بكامل أبعاد المقطع الأصلي)"
+        ]
+    )
+
+    st.divider()
+
+    # 2. خيارات المعالجة والقص الأوتوماتيكي والضغط الذكي
     st.markdown("### ⚡ خيارات السرعة والتحسين التلقائي")
     col_opt1, col_opt2 = st.columns(2)
     with col_opt1:
@@ -156,13 +162,12 @@ if uploaded_file is not None:
 
     enable_smart_compress = st.checkbox(
         "📦 ضغط الحجم بنسبة 70% مع الحفاظ التام على دقة ونقاء الشاشة",
-        value=True,
-        help="تخفيف فوري للمساحة مع ضمان وضوح الصورة وتفاصيلها على الشاشات الحديثة."
+        value=True
     )
 
     st.divider()
 
-    # 2. شريط العنوان الجذاب (Hook Bar)
+    # 3. شريط العنوان الجذاب (Hook Bar)
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو", value=True)
     hook_filter = ""
     hook_text = ""
@@ -185,8 +190,8 @@ if uploaded_file is not None:
             hook_bg_val = bg_map[hook_bg]
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=50:fontsize=26:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=10"
 
-    # 3. وضع وحماية الحساب وتغطية الشعار القديم
-    enable_stamp = st.checkbox("✨ وضع حسابك وتغطية الشعار القديم أسفل اليمين", value=True)
+    # 4. وضع وحماية الحساب
+    enable_stamp = st.checkbox("✨ وضع حسابك في مكان بارز", value=True)
     stamp_filter = ""
     chosen_account_text = ""
     if enable_stamp and saved_accounts:
@@ -198,41 +203,42 @@ if uploaded_file is not None:
             acc_pos = st.selectbox(
                 "📍 موضع الشارة:",
                 [
-                    "تغطية الشعار القديم + وضع حسابك في الأعلى بوضوح",
-                    "أسفل اليمين فقط",
-                    "أعلى المنتصف",
-                    "أعلى اليسار"
+                    "أعلى المنتصف تحت العنوان",
+                    "أسفل اليمين",
+                    "أعلى اليسار",
+                    "أسفل اليسار"
                 ]
             )
 
         final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
         box_style = "box=1:boxcolor=black@0.85:boxborderw=10:fontcolor=white:fontsize=22"
         
-        if acc_pos == "تغطية الشعار القديم + وضع حسابك في الأعلى بوضوح":
-            stamp_filter = (
-                f",drawbox=x={target_w-360}:y={target_h-170}:w=360:h=160:color=black@0.90:t=fill"
-                f",drawtext=text='{final_text}':x=(w-tw)/2:y=110:{box_style}"
-            )
-        elif acc_pos == "أسفل اليمين فقط":
-            stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=h-th-50:{box_style}"
-        elif acc_pos == "أعلى المنتصف":
+        if acc_pos == "أعلى المنتصف تحت العنوان":
             stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=110:{box_style}"
+        elif acc_pos == "أسفل اليمين":
+            stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=h-th-50:{box_style}"
         elif acc_pos == "أعلى اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=30:{box_style}"
+        elif acc_pos == "أسفل اليسار":
+            stamp_filter = f",drawtext=text='{final_text}':x=25:y=h-th-50:{box_style}"
 
-    all_text_filters = f"{hook_filter}{stamp_filter}"
+    # فلاتر تنظيف إضافية حسب الخيار
+    clean_box_filter = ""
+    if "تغطية علوية وسفلية شاملة" in clean_mode:
+        clean_box_filter = f",drawbox=x=0:y=0:w={target_w}:h=170:color=black@0.95:t=fill,drawbox=x=0:y={target_h-160}:w={target_w}:h=160:color=black@0.95:t=fill"
+
+    all_text_filters = f"{clean_box_filter}{hook_filter}{stamp_filter}"
     freshness_filter = ",eq=contrast=1.05:brightness=0.01:saturation=1.12,unsharp=3:3:0.5:3:3:0.0" if enable_freshness else ""
     full_effects = f"{freshness_filter}{all_text_filters}"
 
-    if st.button("🚀 بدء المعالجة الفائقة وتوليد المحتوى"):
-        with st.spinner("جاري المعالجة السريعة، الضغط الذكي، وتوليد نصوص النشر..."):
+    if st.button("🚀 بدء المعالجة والتنظيف الفوري"):
+        with st.spinner("جاري تنظيف المقطع ومعالجته بسرعة فائقة..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # قراءة سريعة لزمن الفيديو
             total_duration = 0.0
             try:
                 probe_cmd = [
@@ -251,10 +257,12 @@ if uploaded_file is not None:
             if enable_auto_trim and total_duration > 3.5:
                 trim_end = total_duration - 2.2
 
-            # فلاتر الإخراج
-            if style_code == "crop":
+            # تطبيق التكبير الذكي لطرد النصوص خارج الشاشة إذا تم اختياره
+            zoom_factor = "1.25" if "تكبير سينمائي ذكي" in clean_mode else "1.0"
+
+            if style_code == "crop" or "تكبير سينمائي ذكي" in clean_mode:
                 filter_complex = (
-                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
+                    f"[0:v]scale={target_w}*{zoom_factor}:{target_h}*{zoom_factor}:force_original_aspect_ratio=increase,"
                     f"crop={target_w}:{target_h}{full_effects}[outv]"
                 )
             elif style_code == "blur_fast":
@@ -311,25 +319,25 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تم تجهيز المقطع بنجاح فائق! (الحجم: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تم تنظيف وتجهيز المقطع بنجاح! (الحجم: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
                         label="⬇️ تحميل المقطع الجاهز للنشر فوراً",
                         data=f,
-                        file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"cleaned_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
 
-                # ----------------- قسم المحتوى الجذاب والهاشتاقات الجاهزة -----------------
+                # قسم المحتوى والهاشتاقات الجاهزة
                 st.divider()
                 st.markdown("### ✍️ نماذج محتوى ونصوص جاهزة للنشر (انسخ والصق بضغطة زر):")
                 
                 base_title = hook_text.strip() if hook_text.strip() else "شاهد هذا المقطع العجيب"
                 account_mention = f"\nتابعني للمزيد: {chosen_account_text}" if chosen_account_text else ""
                 
-                tab1, tab2, tab3 = st.tabs(["🔥 نص تشويقي قوي", "💬 نص تفاعلي (لزيادة التعليقات)", "🏷️ الهاشتاقات المتصدرة"])
+                tab1, tab2, tab3 = st.tabs(["🔥 نص تشويقي قوي", "💬 نص تفاعلي", "🏷️ الهاشتاقات المتصدرة"])
                 
                 with tab1:
                     copy_text_1 = (
