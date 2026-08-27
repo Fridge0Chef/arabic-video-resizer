@@ -5,7 +5,7 @@ import tempfile
 
 # إعدادات الصفحة
 st.set_page_config(
-    page_title="استوديو تعديل وتجهيز الفيديوهات الاحترافي",
+    page_title="استوديو تعديل وتجهيز الفيديوهات الذكي",
     page_icon="🎬",
     layout="centered"
 )
@@ -93,8 +93,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات الشامل</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">عناوين جذابة، ملء ذكي، ضغط 70%، وتجديد حصري لرفع التفاعل</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو المعالجة والقص التلقائي الذكي</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">قص أوتوماتيكي، عناوين جذابة، ملء ذكي، ضغط 70%، وتجديد حصري</p>', unsafe_allow_html=True)
 
 # خيارات المنصات
 PLATFORMS = {
@@ -131,49 +131,34 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # 1. خيار تجديد الفيديو ومنع اكتشاف النقل
-    st.markdown("### 🚀 ميزات التميز وتجديد الفيديو")
-    col_fresh1, col_fresh2 = st.columns(2)
-    with col_fresh1:
+    # 1. خيارات المعالجة والقص الأوتوماتيكي
+    st.markdown("### ⚡ المعالجة والقص التلقائي")
+    col_opt1, col_opt2 = st.columns(2)
+    with col_opt1:
+        enable_auto_trim = st.checkbox(
+            "✂️ قص أوتوماتيكي ذكي (حذف الزوائد في البداية وخاتمة تيك توك)",
+            value=True,
+            help="يقوم النظام تلقائياً باقتطاع البداية البطيئة وحذف آخر ثانيتين من الفيديو (الخاتمة والشعار الختامي)."
+        )
+    with col_opt2:
         enable_freshness = st.checkbox(
-            "🛡️ تجديد المقطع ومسح بصمته السابقة (ألوان سينمائية + تفاصيل أوضح)",
+            "🛡️ تجديد المقطع ومسح البصمة الرقمية (تعديل ألوان + حدة)",
             value=True,
-            help="يمسح البيانات الوصفية ويعدل التباين والحدة ليظهر كفيديو جديد تماماً للخوارزميات والمشاهدين."
+            help="يمسح البيانات الوصفية ويجدد الفيديو ليظهر كأنه فيديو أصلي تم تصويره للتو."
         )
-    with col_fresh2:
-        enable_compression = st.checkbox(
-            "📦 ضغط وتوفير المساحة بنسبة 70% (تنزيل ورفع سريع)",
-            value=True,
-            help="يقلل حجم الملف بشكل فائق مع الحفاظ على وضوح ودقة الشاشة."
-        )
+
+    enable_compression = st.checkbox(
+        "📦 ضغط وتوفير المساحة بنسبة تصل إلى 70% (سرعة فائقة بالتنزيل والرفع)",
+        value=True
+    )
 
     st.divider()
 
-    # 2. خيارات القص والتحكم بالوقت
-    st.markdown("### ✂️ خيارات القص وحذف الزوائد")
-    col_c1, col_c2, col_c3 = st.columns(3)
-    with col_c1:
-        cut_outro = st.checkbox("🚫 حذف خاتمة تيك توك", value=True)
-    with col_c2:
-        cut_intro = st.checkbox("✂️ حذف أول ثانية (مقدمة)", value=False)
-    with col_c3:
-        enable_manual_trim = st.checkbox("⏱️ قص يدوي بالثواني", value=False)
-
-    manual_start, manual_end = 0, 0
-    if enable_manual_trim:
-        col_m1, col_m2 = st.columns(2)
-        with col_m1:
-            manual_start = st.number_input("بداية القص (ثواني):", min_value=0, value=0, step=1)
-        with col_m2:
-            manual_end = st.number_input("نهاية القص (ثواني - 0 للنهاية):", min_value=0, value=0, step=1)
-
-    st.divider()
-
-    # 3. شريط العنوان الجذاب (Hook Bar)
+    # 2. شريط العنوان الجذاب (Hook Bar)
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو", value=True)
     hook_filter = ""
     if enable_hook:
-        hook_text = st.text_input("نص العنوان الجذاب (Hook):", placeholder="مثال: سر خطير لا يفوتك 😱🔥")
+        hook_text = st.text_input("نص العنوان الجذاب (Hook):", placeholder="مثال: شاهد القصة للنهاية 😱🔥")
         col_h1, col_h2 = st.columns(2)
         with col_h1:
             hook_bg = st.selectbox("لون خلفية الشريط:", ["أصفر 🟨", "أسود ⬛", "أحمر 🟥", "أبيض ⬜"])
@@ -191,7 +176,7 @@ if uploaded_file is not None:
             hook_bg_val = bg_map[hook_bg]
             hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=50:fontsize=26:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=10"
 
-    # 4. وضع وحماية الحساب وتغطية الشعار القديم
+    # 3. وضع وحماية الحساب وتغطية الشعار القديم
     enable_stamp = st.checkbox("✨ وضع حسابك وتغطية الشعار القديم أسفل اليمين", value=True)
     stamp_filter = ""
     if enable_stamp and saved_accounts:
@@ -225,20 +210,18 @@ if uploaded_file is not None:
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=30:{box_style}"
 
     all_text_filters = f"{hook_filter}{stamp_filter}"
-
-    # إضافة تحسين الألوان وتجديد المقطع في سلسلة الفلاتر
     freshness_filter = ",eq=contrast=1.06:brightness=0.01:saturation=1.15,unsharp=3:3:0.6:3:3:0.0" if enable_freshness else ""
     full_effects = f"{freshness_filter}{all_text_filters}"
 
-    if st.button("🚀 معالجة فورية وتجهيز الفيديو الحصري"):
-        with st.spinner("جاري تجديد المقطع، ضبط الأبعاد، وتطبيق التعديلات بسرعة فائقة..."):
+    if st.button("🚀 معالجة وقص أوتوماتيكي فوري"):
+        with st.spinner("جاري القص الذكي وتجديد المقطع بسرعة فائقة..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # فحص فوري لمدة المقطع بـ ffprobe
+            # استخراج مدة الفيديو في أجزاء من الثانية بـ ffprobe
             total_duration = 0.0
             try:
                 probe_cmd = [
@@ -252,15 +235,13 @@ if uploaded_file is not None:
             except Exception:
                 pass
 
-            # حساب حدود القص الفوري
-            trim_start = float(manual_start) if enable_manual_trim else (1.0 if cut_intro else 0.0)
-            trim_end = float(manual_end) if (enable_manual_trim and manual_end > 0) else 0.0
+            # تحديد أوقات القص الأوتوماتيكي
+            trim_start = 0.6 if enable_auto_trim else 0.0
+            trim_end = 0.0
+            if enable_auto_trim and total_duration > 3.5:
+                trim_end = total_duration - 2.2
 
-            if cut_outro and total_duration > 3.0:
-                if trim_end == 0 or trim_end > total_duration - 2.2:
-                    trim_end = total_duration - 2.2
-
-            # بناء الفلاتر الإخراجية
+            # بناء فلاتر العرض
             if style_code == "crop":
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
@@ -287,7 +268,6 @@ if uploaded_file is not None:
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{full_effects}[outv]"
                 )
 
-            # إعدادات الضغط والسرعة ومسح البيانات الوصفية
             crf_val = "29" if enable_compression else "23"
             audio_bitrate = "96k" if enable_compression else "128k"
 
@@ -302,7 +282,7 @@ if uploaded_file is not None:
                 "-filter_complex", filter_complex,
                 "-map", "[outv]",
                 "-map", "0:a?",
-                "-map_metadata", "-1",  # مسح البصمة الرقمية للظهور كفيديو أصلي جديد
+                "-map_metadata", "-1",
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-tune", "zerolatency",
@@ -317,14 +297,14 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تم تجديد ومعالجة الفيديو بنجاح! (حجم الملف النهائي: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تم القص والمعالجة بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الحصري الجاهز للنشر",
+                        label="⬇️ تحميل المقطع الجاهز للنشر",
                         data=f,
-                        file_name=f"exclusive_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
             except subprocess.CalledProcessError as e:
