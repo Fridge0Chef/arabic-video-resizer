@@ -60,6 +60,13 @@ st.markdown("""
         background-color: #1D4ED8; 
         color: white; 
     }
+    .copy-card {
+        background-color: #1E293B;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid #334155;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -93,8 +100,8 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو المعالجة والقص التلقائي الذكي</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">قص أوتوماتيكي، عناوين جذابة، ملء ذكي، ضغط 70%، وتجديد حصري</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل الفيديوهات ومولّد المحتوى الذكي</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">معالجة فورية فائقة السرعة، ضغط ذكي 70%، وعناوين ونصوص جاهزة للانتشار</p>', unsafe_allow_html=True)
 
 # خيارات المنصات
 PLATFORMS = {
@@ -107,8 +114,8 @@ PLATFORMS = {
 
 # أنماط العرض والتنسيق
 STYLES = {
-    "⚡ ملء الشاشة الذكي الكامل (بدون أي هوامش سوداء)": "crop",
-    "🌟 تمويه ضبابي سينمائي (تعتيم ناعم ومظهر فاخر)": "blur_fast",
+    "⚡ ملء الشاشة الذكي الكامل (بدون هوامش سوداء)": "crop",
+    "🌟 تمويه ضبابي سينمائي (سريع وخفيف)": "blur_fast",
     "🎙️ إطار استوديو البودكاست الحديث": "podcast_card",
     "⬛ إطار أسود كلاسيكي نقي": "fit"
 }
@@ -131,25 +138,26 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # 1. خيارات المعالجة والقص الأوتوماتيكي
-    st.markdown("### ⚡ المعالجة والقص التلقائي")
+    # 1. خيارات المعالجة والقص الأوتوماتيكي والضغط الذكي
+    st.markdown("### ⚡ خيارات السرعة والتحسين التلقائي")
     col_opt1, col_opt2 = st.columns(2)
     with col_opt1:
         enable_auto_trim = st.checkbox(
-            "✂️ قص أوتوماتيكي ذكي (حذف الزوائد في البداية وخاتمة تيك توك)",
+            "✂️ قص أوتوماتيكي ذكي (حذف البداية وخاتمة تيك توك)",
             value=True,
-            help="يقوم النظام تلقائياً باقتطاع البداية البطيئة وحذف آخر ثانيتين من الفيديو (الخاتمة والشعار الختامي)."
+            help="يقتطع البداية البطيئة وآخر ثانيتين تلقائياً دون أي تأخير."
         )
     with col_opt2:
         enable_freshness = st.checkbox(
-            "🛡️ تجديد المقطع ومسح البصمة الرقمية (تعديل ألوان + حدة)",
+            "🛡️ تجديد البصمة الرقمية (ألوان زاهية + وضوح فائق)",
             value=True,
-            help="يمسح البيانات الوصفية ويجدد الفيديو ليظهر كأنه فيديو أصلي تم تصويره للتو."
+            help="يمسح البيانات الوصفية ويضبط الألوان ليظهر كفيديو جديد أصلي."
         )
 
-    enable_compression = st.checkbox(
-        "📦 ضغط وتوفير المساحة بنسبة تصل إلى 70% (سرعة فائقة بالتنزيل والرفع)",
-        value=True
+    enable_smart_compress = st.checkbox(
+        "📦 ضغط الحجم بنسبة 70% مع الحفاظ التام على دقة ونقاء الشاشة",
+        value=True,
+        help="تخفيف فوري للمساحة مع ضمان وضوح الصورة وتفاصيلها على الشاشات الحديثة."
     )
 
     st.divider()
@@ -157,8 +165,9 @@ if uploaded_file is not None:
     # 2. شريط العنوان الجذاب (Hook Bar)
     enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو", value=True)
     hook_filter = ""
+    hook_text = ""
     if enable_hook:
-        hook_text = st.text_input("نص العنوان الجذاب (Hook):", placeholder="مثال: شاهد القصة للنهاية 😱🔥")
+        hook_text = st.text_input("نص العنوان الجذاب (Hook):", placeholder="مثال: سر خطير لا يفوتك 😱🔥", value="شاهد القصة للنهاية 😱🔥")
         col_h1, col_h2 = st.columns(2)
         with col_h1:
             hook_bg = st.selectbox("لون خلفية الشريط:", ["أصفر 🟨", "أسود ⬛", "أحمر 🟥", "أبيض ⬜"])
@@ -179,10 +188,12 @@ if uploaded_file is not None:
     # 3. وضع وحماية الحساب وتغطية الشعار القديم
     enable_stamp = st.checkbox("✨ وضع حسابك وتغطية الشعار القديم أسفل اليمين", value=True)
     stamp_filter = ""
+    chosen_account_text = ""
     if enable_stamp and saved_accounts:
         col_sel1, col_sel2 = st.columns(2)
         with col_sel1:
             chosen_label = st.selectbox("👤 اختر حسابك:", list(saved_accounts.keys()))
+            chosen_account_text = saved_accounts[chosen_label]
         with col_sel2:
             acc_pos = st.selectbox(
                 "📍 موضع الشارة:",
@@ -210,18 +221,18 @@ if uploaded_file is not None:
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=30:{box_style}"
 
     all_text_filters = f"{hook_filter}{stamp_filter}"
-    freshness_filter = ",eq=contrast=1.06:brightness=0.01:saturation=1.15,unsharp=3:3:0.6:3:3:0.0" if enable_freshness else ""
+    freshness_filter = ",eq=contrast=1.05:brightness=0.01:saturation=1.12,unsharp=3:3:0.5:3:3:0.0" if enable_freshness else ""
     full_effects = f"{freshness_filter}{all_text_filters}"
 
-    if st.button("🚀 معالجة وقص أوتوماتيكي فوري"):
-        with st.spinner("جاري القص الذكي وتجديد المقطع بسرعة فائقة..."):
+    if st.button("🚀 بدء المعالجة الفائقة وتوليد المحتوى"):
+        with st.spinner("جاري المعالجة السريعة، الضغط الذكي، وتوليد نصوص النشر..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
-            # استخراج مدة الفيديو في أجزاء من الثانية بـ ffprobe
+            # قراءة سريعة لزمن الفيديو
             total_duration = 0.0
             try:
                 probe_cmd = [
@@ -230,18 +241,17 @@ if uploaded_file is not None:
                     "-of", "default=noprint_wrappers=1:nokey=1",
                     input_path
                 ]
-                res_probe = subprocess.run(probe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3)
+                res_probe = subprocess.run(probe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2)
                 total_duration = float(res_probe.stdout.strip())
             except Exception:
                 pass
 
-            # تحديد أوقات القص الأوتوماتيكي
             trim_start = 0.6 if enable_auto_trim else 0.0
             trim_end = 0.0
             if enable_auto_trim and total_duration > 3.5:
                 trim_end = total_duration - 2.2
 
-            # بناء فلاتر العرض
+            # فلاتر الإخراج
             if style_code == "crop":
                 filter_complex = (
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=increase,"
@@ -249,7 +259,7 @@ if uploaded_file is not None:
                 )
             elif style_code == "blur_fast":
                 filter_complex = (
-                    f"[0:v]scale=90:160,boxblur=3:3,scale={target_w}:{target_h}[bg];"
+                    f"[0:v]scale=64:114,boxblur=2:2,scale={target_w}:{target_h}[bg];"
                     f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
                     f"[bg][fg]overlay=(W-w)/2:(H-h)/2{full_effects}[outv]"
@@ -268,10 +278,14 @@ if uploaded_file is not None:
                     f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{full_effects}[outv]"
                 )
 
-            crf_val = "29" if enable_compression else "23"
-            audio_bitrate = "96k" if enable_compression else "128k"
+            crf_val = "25" if enable_smart_compress else "21"
+            audio_bitrate = "128k"
 
-            cmd = ["ffmpeg", "-y"]
+            cmd = [
+                "ffmpeg", "-y",
+                "-threads", "0"
+            ]
+            
             if trim_start > 0:
                 cmd.extend(["-ss", str(trim_start)])
             if trim_end > trim_start:
@@ -284,8 +298,8 @@ if uploaded_file is not None:
                 "-map", "0:a?",
                 "-map_metadata", "-1",
                 "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-tune", "zerolatency",
+                "-preset", "veryfast",
+                "-movflags", "+faststart",
                 "-pix_fmt", "yuv420p",
                 "-crf", crf_val,
                 "-c:a", "aac",
@@ -297,16 +311,51 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تم القص والمعالجة بنجاح! (حجم الملف الناتج: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تم تجهيز المقطع بنجاح فائق! (الحجم: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
-                        label="⬇️ تحميل المقطع الجاهز للنشر",
+                        label="⬇️ تحميل المقطع الجاهز للنشر فوراً",
                         data=f,
                         file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
+
+                # ----------------- قسم المحتوى الجذاب والهاشتاقات الجاهزة -----------------
+                st.divider()
+                st.markdown("### ✍️ نماذج محتوى ونصوص جاهزة للنشر (انسخ والصق بضغطة زر):")
+                
+                base_title = hook_text.strip() if hook_text.strip() else "شاهد هذا المقطع العجيب"
+                account_mention = f"\nتابعني للمزيد: {chosen_account_text}" if chosen_account_text else ""
+                
+                tab1, tab2, tab3 = st.tabs(["🔥 نص تشويقي قوي", "💬 نص تفاعلي (لزيادة التعليقات)", "🏷️ الهاشتاقات المتصدرة"])
+                
+                with tab1:
+                    copy_text_1 = (
+                        f"{base_title} 😱🔥\n\n"
+                        f"شوفوا اللي صار للنهاية، والله ما توقعت كذا! 👀👇\n"
+                        f"شارك المقطع مع اللي يعز عليك ❤️{account_mention}\n\n"
+                        f"#اكسبلور #ترند #explore #fyp #السعودية"
+                    )
+                    st.text_area("انسخ النص التشويقي:", value=copy_text_1, height=140)
+                
+                with tab2:
+                    copy_text_2 = (
+                        f"{base_title} ✨\n\n"
+                        f"لو كنت مكانه، وش كان بيكون تصرفك؟ 🤔💭\n"
+                        f"اكتبوا لي رأيكم في التعليقات تحت 👇🔥{account_mention}\n\n"
+                        f"#تيك_توك #ريلز #سناب #فيديو_اليوم #viral"
+                    )
+                    st.text_area("انسخ النص التفاعلي:", value=copy_text_2, height=140)
+                
+                with tab3:
+                    hashtags = (
+                        "#اكسبلور #explore #ترند #fypシ #viral #السعودية #الرياض #جدة "
+                        "#تيك_توك #مقاطع_ضحك #قصص #شورتس #ريلز #foryoupage #trend"
+                    )
+                    st.text_area("انسخ حزمة الهاشتاقات المتصدرة:", value=hashtags, height=100)
+
             except subprocess.CalledProcessError as e:
                 err_msg = e.stderr.decode('utf-8', errors='ignore')
                 st.error("حدث خطأ أثناء معالجة الفيديو:")
