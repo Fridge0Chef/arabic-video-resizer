@@ -10,7 +10,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# واجهة عربية كاملة، إخفاء شريط الاستضافة والأيقونات المتداخلة
+# واجهة عربية كاملة، إخفاء شريط الاستضافة وقوائم النظام
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -93,10 +93,10 @@ if st.session_state.get("yt", "abu10shaher").strip():
     clean_yt = st.session_state.get("yt", "abu10shaher").strip().lstrip('@')
     saved_accounts[f"▶️ يوتيوب (@{clean_yt})"] = f"YouTube @{clean_yt}"
 
-st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات الشامل</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">تنظيف النصوص القديمة، ملء الشاشة، ضغط ذكي 70%، وعناوين فيروسية</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">🎬 استوديو تعديل وتجهيز الفيديوهات الفوري</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">معالجة صاروخية بدقة 720p، ملء ذكي، عناوين جذابة، ومولد محتوى متكامل</p>', unsafe_allow_html=True)
 
-# خيارات المنصات
+# خيارات المنصات بدقة 720p فائقة السرعة
 PLATFORMS = {
     "تيك توك / سناب شات / شورتس (طولي 9:16)": {"w": 720, "h": 1280, "name": "9_16_Vertical"},
     "ريلز إنستقرام (طولي 9:16)": {"w": 720, "h": 1280, "name": "Reels_9_16"},
@@ -105,12 +105,11 @@ PLATFORMS = {
     "يوتيوب كلاسيكي (أفقي 16:9)": {"w": 1280, "h": 720, "name": "Landscape_16_9"},
 }
 
-# أنماط العرض والتنسيق
+# أنماط العرض والتنسيق السريعة والخفيفة
 STYLES = {
-    "⚡ ملء الشاشة الذكي الكامل (بدون هوامش سوداء)": "crop",
-    "🌟 تمويه ضبابي سينمائي (سريع وخفيف)": "blur_fast",
-    "🎙️ إطار استوديو البودكاست الحديث": "podcast_card",
-    "⬛ إطار أسود كلاسيكي نقي": "fit"
+    "⚡ ملء الشاشة الذكي الكامل (بدون هوامش - الأسرع والأكثر انتشاراً)": "crop",
+    "🎙️ إطار استوديو البودكاست الحديث (خلفية داكنة خفيفة)": "podcast_card",
+    "⬛ إطار أسود كلاسيكي نقي (Fit)": "fit"
 }
 
 uploaded_file = st.file_uploader("اختر مقطع الفيديو من جهازك:", type=["mp4", "mov", "mkv"])
@@ -121,7 +120,7 @@ if uploaded_file is not None:
     
     col1, col2 = st.columns(2)
     with col1:
-        selected_platform = st.selectbox("🎯 المنصة المستهدفة:", list(PLATFORMS.keys()))
+        selected_platform = st.selectbox("🎯 المنصة المستهدفة (دقة 720p HD):", list(PLATFORMS.keys()))
     with col2:
         selected_style = st.selectbox("🎨 نمط العرض والإخراج:", list(STYLES.keys()))
 
@@ -131,44 +130,31 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # 1. خيارات تنظيف الكلام والشعارات القديمة
-    st.markdown("### 🧹 تنظيف وحذف الكتابات والعلامات القديمة")
-    clean_mode = st.radio(
-        "اختر طريقة التخلص من الكلام والعلامات في المقطع:",
-        [
-            "🔍 تكبير سينمائي ذكي (يقص ويطرد النصوص والعلامات الموجودة في أطراف الفيديو)",
-            "⬛ تغطية علوية وسفلية شاملة (إخفاء كافة النصوص القديمة تحت أشرطة أنيقة)",
-            "🔘 عادي (الاحتفاظ بكامل أبعاد المقطع الأصلي)"
-        ]
-    )
-
-    st.divider()
-
-    # 2. خيارات المعالجة والقص الأوتوماتيكي والضغط الذكي
-    st.markdown("### ⚡ خيارات السرعة والتحسين التلقائي")
+    # 1. خيارات تنظيف النصوص والتعديل التلقائي
+    st.markdown("### ⚡ المعالجة والقص الفوري")
     col_opt1, col_opt2 = st.columns(2)
     with col_opt1:
         enable_auto_trim = st.checkbox(
             "✂️ قص أوتوماتيكي ذكي (حذف البداية وخاتمة تيك توك)",
             value=True,
-            help="يقتطع البداية البطيئة وآخر ثانيتين تلقائياً دون أي تأخير."
+            help="يقتطع البداية البطيئة وآخر ثانيتين تلقائياً وبسرعة فائقة."
         )
     with col_opt2:
-        enable_freshness = st.checkbox(
-            "🛡️ تجديد البصمة الرقمية (ألوان زاهية + وضوح فائق)",
+        clean_zoom = st.checkbox(
+            "🔍 تكبير خفيف لطرد النصوص والشعارات بالأطراف (Smart Zoom)",
             value=True,
-            help="يمسح البيانات الوصفية ويضبط الألوان ليظهر كفيديو جديد أصلي."
+            help="يكبر المقطع بنسبة محسوبة لإخفاء الكتابات القديمة من حواف الفيديو."
         )
 
     enable_smart_compress = st.checkbox(
-        "📦 ضغط الحجم بنسبة 70% مع الحفاظ التام على دقة ونقاء الشاشة",
+        "📦 ضغط الحجم بنسبة 70% وتجديد البصمة الرقمية (فيديو أصلي وخفيف)",
         value=True
     )
 
     st.divider()
 
-    # 3. شريط العنوان الجذاب (Hook Bar)
-    enable_hook = st.checkbox("🔥 إضافة شريط عنوان رئيسي جذاب فوق الفيديو", value=True)
+    # 2. شريط العنوان الجذاب (Hook Bar)
+    enable_hook = st.checkbox("🔥 إضافة شريط عنوان جذاب فوق الفيديو", value=True)
     hook_filter = ""
     hook_text = ""
     if enable_hook:
@@ -188,10 +174,10 @@ if uploaded_file is not None:
                 "أبيض ⬜": "white@0.95"
             }
             hook_bg_val = bg_map[hook_bg]
-            hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=50:fontsize=26:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=10"
+            hook_filter = f",drawtext=text='{clean_hook}':x=(w-text_w)/2:y=45:fontsize=26:fontcolor={hook_color}:box=1:boxcolor={hook_bg_val}:boxborderw=10"
 
-    # 4. وضع وحماية الحساب
-    enable_stamp = st.checkbox("✨ وضع حسابك في مكان بارز", value=True)
+    # 3. وضع وحماية الحساب وتغطية القديم
+    enable_stamp = st.checkbox("✨ وضع حسابك وتغطية الشعار القديم أسفل اليمين", value=True)
     stamp_filter = ""
     chosen_account_text = ""
     if enable_stamp and saved_accounts:
@@ -203,42 +189,39 @@ if uploaded_file is not None:
             acc_pos = st.selectbox(
                 "📍 موضع الشارة:",
                 [
-                    "أعلى المنتصف تحت العنوان",
-                    "أسفل اليمين",
-                    "أعلى اليسار",
-                    "أسفل اليسار"
+                    "تغطية الشعار القديم + وضع حسابك في الأعلى بوضوح",
+                    "أسفل اليمين فقط",
+                    "أعلى المنتصف",
+                    "أعلى اليسار"
                 ]
             )
 
         final_text = saved_accounts[chosen_label].replace(":", "\\:").replace("'", "")
         box_style = "box=1:boxcolor=black@0.85:boxborderw=10:fontcolor=white:fontsize=22"
         
-        if acc_pos == "أعلى المنتصف تحت العنوان":
-            stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=110:{box_style}"
-        elif acc_pos == "أسفل اليمين":
+        if acc_pos == "تغطية الشعار القديم + وضع حسابك في الأعلى بوضوح":
+            stamp_filter = (
+                f",drawbox=x={target_w-360}:y={target_h-170}:w=360:h=160:color=black@0.90:t=fill"
+                f",drawtext=text='{final_text}':x=(w-tw)/2:y=105:{box_style}"
+            )
+        elif acc_pos == "أسفل اليمين فقط":
             stamp_filter = f",drawtext=text='{final_text}':x=w-tw-25:y=h-th-50:{box_style}"
+        elif acc_pos == "أعلى المنتصف":
+            stamp_filter = f",drawtext=text='{final_text}':x=(w-tw)/2:y=105:{box_style}"
         elif acc_pos == "أعلى اليسار":
             stamp_filter = f",drawtext=text='{final_text}':x=25:y=30:{box_style}"
-        elif acc_pos == "أسفل اليسار":
-            stamp_filter = f",drawtext=text='{final_text}':x=25:y=h-th-50:{box_style}"
 
-    # فلاتر تنظيف إضافية حسب الخيار
-    clean_box_filter = ""
-    if "تغطية علوية وسفلية شاملة" in clean_mode:
-        clean_box_filter = f",drawbox=x=0:y=0:w={target_w}:h=170:color=black@0.95:t=fill,drawbox=x=0:y={target_h-160}:w={target_w}:h=160:color=black@0.95:t=fill"
+    all_text_filters = f"{hook_filter}{stamp_filter}"
 
-    all_text_filters = f"{clean_box_filter}{hook_filter}{stamp_filter}"
-    freshness_filter = ",eq=contrast=1.05:brightness=0.01:saturation=1.12,unsharp=3:3:0.5:3:3:0.0" if enable_freshness else ""
-    full_effects = f"{freshness_filter}{all_text_filters}"
-
-    if st.button("🚀 بدء المعالجة والتنظيف الفوري"):
-        with st.spinner("جاري تنظيف المقطع ومعالجته بسرعة فائقة..."):
+    if st.button("🚀 بدء المعالجة الصاروخية وتجهيز الفيديو"):
+        with st.spinner("جاري التجهيز السريع في ثانية إلى ثانيتين..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as in_temp:
                 in_temp.write(uploaded_file.read())
                 input_path = in_temp.name
             
             output_path = tempfile.mktemp(suffix=".mp4")
 
+            # فحص فوري لمدة الفيديو عبر ffprobe
             total_duration = 0.0
             try:
                 probe_cmd = [
@@ -257,37 +240,32 @@ if uploaded_file is not None:
             if enable_auto_trim and total_duration > 3.5:
                 trim_end = total_duration - 2.2
 
-            # تطبيق التكبير الذكي لطرد النصوص خارج الشاشة إذا تم اختياره
-            zoom_factor = "1.25" if "تكبير سينمائي ذكي" in clean_mode else "1.0"
+            # معامل التكبير السريع لطرد النصوص
+            zoom_mult = 1.18 if clean_zoom else 1.0
+            calc_w = int(target_w * zoom_mult)
+            calc_h = int(target_h * zoom_mult)
 
-            if style_code == "crop" or "تكبير سينمائي ذكي" in clean_mode:
+            # بناء الفلاتر الخفيفة أحادية الطبقة (Single-Pass Light Chain)
+            if style_code == "crop" or clean_zoom:
                 filter_complex = (
-                    f"[0:v]scale={target_w}*{zoom_factor}:{target_h}*{zoom_factor}:force_original_aspect_ratio=increase,"
-                    f"crop={target_w}:{target_h}{full_effects}[outv]"
-                )
-            elif style_code == "blur_fast":
-                filter_complex = (
-                    f"[0:v]scale=64:114,boxblur=2:2,scale={target_w}:{target_h}[bg];"
-                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
-                    f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{full_effects}[outv]"
+                    f"[0:v]scale={calc_w}:{calc_h}:force_original_aspect_ratio=increase:flags=bicubic,"
+                    f"crop={target_w}:{target_h}{all_text_filters}[outv]"
                 )
             elif style_code == "podcast_card":
                 filter_complex = (
                     f"color=c=#0B0F17:s={target_w}x{target_h}[bg];"
-                    f"[0:v]scale={target_w}-40:{target_h}-180:force_original_aspect_ratio=decrease,"
+                    f"[0:v]scale={target_w}-40:{target_h}-180:force_original_aspect_ratio=decrease:flags=bicubic,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{full_effects}[outv]"
+                    f"[bg][fg]overlay=(W-w)/2:(H-h)/2{all_text_filters}[outv]"
                 )
             else: # fit
                 filter_complex = (
-                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease,"
+                    f"[0:v]scale={target_w}:{target_h}:force_original_aspect_ratio=decrease:flags=bicubic,"
                     f"scale=trunc(iw/2)*2:trunc(ih/2)*2,"
-                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{full_effects}[outv]"
+                    f"pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black{all_text_filters}[outv]"
                 )
 
-            crf_val = "25" if enable_smart_compress else "21"
-            audio_bitrate = "128k"
+            crf_val = "25" if enable_smart_compress else "22"
 
             cmd = [
                 "ffmpeg", "-y",
@@ -306,12 +284,13 @@ if uploaded_file is not None:
                 "-map", "0:a?",
                 "-map_metadata", "-1",
                 "-c:v", "libx264",
-                "-preset", "veryfast",
+                "-preset", "ultrafast",
+                "-tune", "zerolatency",
                 "-movflags", "+faststart",
                 "-pix_fmt", "yuv420p",
                 "-crf", crf_val,
                 "-c:a", "aac",
-                "-b:a", audio_bitrate,
+                "-b:a", "128k",
                 output_path
             ])
 
@@ -319,25 +298,25 @@ if uploaded_file is not None:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
                 
-                st.success(f"⚡ تم تنظيف وتجهيز المقطع بنجاح! (الحجم: {file_size_mb:.2f} ميجابايت)")
+                st.success(f"⚡ تمت المعالجة بسرعة قياسية! (حجم الملف: {file_size_mb:.2f} ميجابايت)")
                 st.video(output_path)
 
                 with open(output_path, "rb") as f:
                     st.download_button(
                         label="⬇️ تحميل المقطع الجاهز للنشر فوراً",
                         data=f,
-                        file_name=f"cleaned_{PLATFORMS[selected_platform]['name']}.mp4",
+                        file_name=f"ready_{PLATFORMS[selected_platform]['name']}.mp4",
                         mime="video/mp4"
                     )
 
-                # قسم المحتوى والهاشتاقات الجاهزة
+                # قسم المحتوى ونصوص النشر الجاهزة
                 st.divider()
                 st.markdown("### ✍️ نماذج محتوى ونصوص جاهزة للنشر (انسخ والصق بضغطة زر):")
                 
                 base_title = hook_text.strip() if hook_text.strip() else "شاهد هذا المقطع العجيب"
                 account_mention = f"\nتابعني للمزيد: {chosen_account_text}" if chosen_account_text else ""
                 
-                tab1, tab2, tab3 = st.tabs(["🔥 نص تشويقي قوي", "💬 نص تفاعلي", "🏷️ الهاشتاقات المتصدرة"])
+                tab1, tab2, tab3 = st.tabs(["🔥 نص تشويقي قوي", "💬 نص تفاعلي (تعليقات)", "🏷️ الهاشتاقات المتصدرة"])
                 
                 with tab1:
                     copy_text_1 = (
